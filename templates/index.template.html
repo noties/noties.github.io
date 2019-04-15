@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{this.$site.title}}</title>
+
+    {{ this.$include(this, 'includes/meta.include.html') }}
+
+</head>
+
+<body>
+    <header>
+        <img class="avatar" src="{{this.$withBase('/av.jpg')}}" alt="Dimitry Ivanov">
+        <h1 style="margin-bottom: 0.25em; font-family: monospace">{{this.$site.title}}</h1>
+        <div>
+            <a class="header-icon" href="https://github.com/noties">{{ this.$include(this, 'public/assets/ic_github.svg') }}</a>
+            <a class="header-icon" href="https://linkedin.com/in/dimitryivanov">{{ this.$include(this, 'public/assets/ic_linkedin.svg') }}</a>
+            <a class="header-icon" href="mailto:di@noties.io">{{ this.$include(this, 'public/assets/ic_email.svg') }}</a>
+        </div>
+    </header>
+    <main>
+        <div class="container">
+            <script $>
+                this.$pages
+                    .map(p => {
+                        return `
+                        <div class="page-item">
+                            <h2 class="page-item-title"><a href="${this.$withBase(p.url)}">${p.title}</a></h2>
+                            <div class="page-item-content">
+                                ${p.excerpt || p.content}
+                            </div>
+                            ${(p.excerpt && `<a class="page-item-excerpt-label" href="${this.$withBase(p.url)}">${p.excerptLabel}</a>`) || ''}
+                        </div>
+                        `
+                    })
+                    .join('\n');
+            </script>
+        </div>
+    </main>
+    {{ this.$include(this, 'includes/footer.include.html') }}
+</body>
+
+</html>

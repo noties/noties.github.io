@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{`${this.$page.title} | ${this.$site.title}`}}</title>
+
+    {{ this.$include(this, 'includes/meta.include.html') }}
+    
+    <script $>
+        // meta tags
+        [
+            { name: 'author', content: this.$page.author },
+            { name: 'keywords', content: this.$page.tags && this.$page.tags.join(',') },
+            { name: 'description', content: this.$page.description }
+        ]
+            .filter(o => !!o.content)
+            .map(o => `<meta name="${o.name}" content="${o.content}">`)
+            .join('\n');
+    </script>
+
+    <script $>
+        // open graph
+        [
+            { property: 'og:title', content: this.$page.title },
+            { property: 'og:description', content: this.$page.description },
+            { property: 'og:type', content: 'website' },
+            { property: 'og:url', content: this.$site.url + this.$page.url },
+            { property: 'og:image', content: this.$page.image && this.$site.url + this.$page.image },
+            { property: 'og:site_name', content: this.$site.name }
+        ]
+            .filter(o => !!o.content)
+            .map(o => `<meta property="${o.property}" content="${o.content}">`)
+            .join('\n');
+    </script>
+</head>
+
+<body>
+    <header>
+        <img class="avatar" src="{{this.$withBase('/av.jpg')}}" alt="Dimitry Ivanov">
+        <h1 style="font-family: monospace">{{this.$page.title}}</h1>
+        <a class="about" href="/">by {{this.$page.author.toUpperCase()}}</a>
+    </header>
+    <main>
+        <div class="container">
+
+            <div class="content">
+                {{ this.$page.content }}
+            </div>
+
+            <div class="post-date">
+                <script $>
+                        `<em>${this.$formatDate(this.$page.date)}</em>`
+                </script>
+            </div>
+
+            <hr style="height: 0.1em;" />
+
+            <script $>
+
+                const previous = this.$previousPage(this.$site, this.$page);
+                const next = this.$nextPage(this.$site, this.$page);
+
+                if (previous || next) {
+
+                    let content = '<div class="post-navigation">';
+
+                    if (previous) {
+                        content += `
+                            <div class="post-navigation-item previous-page">
+                                <span class="post-navigation-symbol">&lt; Previous</span>
+                                <a href="${this.$withBase(previous.url)}">${previous.title}</a>
+                            </div>`;
+                    }
+                    if (next) {
+                        content += `
+                            <div class="post-navigation-item next-page">
+                                <span class="post-navigation-symbol">Next &gt;</span>
+                                <a href="${this.$withBase(next.url)}">${next.title}</a>
+                            </div>`
+                    }
+                    content += '</div>'
+
+                    content;
+                }
+            </script>
+
+        </div>
+    </main>
+    {{ this.$include(this, 'includes/footer.include.html') }}
+</body>
+
+</html>

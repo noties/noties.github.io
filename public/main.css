@@ -1,0 +1,514 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: "Helvetica", "Arial", sans-serif;
+  color: #566b78;
+  line-height: 1.5;
+  font-size: 1.1em;
+}
+
+main {
+  margin: 0 auto;
+  padding: 4em 1em;
+  max-width: 50em;
+}
+
+header {
+  line-height: 1.2;
+  padding: 10vw 2em;
+  text-align: center;
+  background-position: center top;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background: #8c9bba;
+  background: linear-gradient(to bottom, #8c9bba, #e4b999);
+}
+
+header .avatar {
+  display: inline-block;
+  height: 120px;
+  vertical-align: top;
+  width: 120px;
+  border-radius: 50%;
+}
+
+header h1 {
+  color: white;
+  font-size: 2.5em;
+  font-weight: 300;
+  border: none;
+}
+
+header .header-icon svg {
+  width: 1.25em;
+  height: 1.25em;
+  margin: 0 0.25em;
+}
+
+.header-icon .svg-path {
+  fill: #ffffff;
+}
+
+header .about {
+  border: 1px solid #ff6f00;
+  border-radius: 290486px;
+  color: white;
+  font-size: 0.6em;
+  letter-spacing: 0.2em;
+  padding: 1em 2em;
+  text-decoration: none;
+}
+
+header .about:hover {
+  background: #ff6f00;
+  color: white;
+}
+
+header .about:visited {
+  color: white;
+  border-color: #ff6f00;
+}
+
+h1,
+h2 {
+  margin-top: 1em;
+  border-bottom: 1px solid #eaecef;
+  margin-bottom: 1em;
+}
+
+h1,
+h2,
+strong {
+  color: #333;
+}
+
+code,
+pre {
+  background: #f5f7f9;
+}
+
+pre {
+  padding: 1em;
+  margin-top: 1em;
+  margin-bottom: 1em;
+  position: relative;
+  overflow-x: auto;
+  font-size: 0.9em;
+}
+
+pre code {
+  padding: 0;
+}
+
+code {
+  vertical-align: text-bottom;
+  width: 100%;
+  font-size: 1.1em;
+}
+
+code[class*="language-"]::before {
+  position: absolute;
+  right: 0;
+  top: 0;
+  color: #999;
+  font-size: 0.75em;
+  padding: 0.5em;
+}
+
+a {
+  color: #ff6f00;
+  border-color: #ff6f00;
+}
+
+a:visited {
+  color: #8e24aa;
+  border-color: #8e24aa;
+}
+
+.tags .tag {
+  padding: 0.25em 0.5em;
+  background: #eee;
+  border-radius: 0.5em;
+  margin: 0.2em;
+  display: inline-block;
+}
+
+blockquote {
+  background: #fafafa;
+  border-left: 0.25em solid #dfe2e5;
+  color: #6a737d;
+  padding: 0 1em;
+  margin-top: 1em;
+  margin-bottom: 1em;
+}
+
+p {
+  margin-top: 1em;
+  margin-bottom: 1em;
+}
+
+blockquote p {
+  padding: 0.5em 0;
+  margin: 0;
+}
+
+hr {
+  background-color: #e1e4e8;
+  border: 0;
+  height: 0.25em;
+  margin: 2em 0;
+}
+
+ol,
+ul {
+  padding-left: 2em;
+}
+
+li + li {
+  margin-top: 0.25em;
+}
+
+code {
+  background-color: rgba(27, 31, 35, 0.05);
+  border-radius: 3px;
+  margin: 0;
+  padding: 0.2em 0.4em;
+}
+
+/* languages */
+code[class*="language-"]::before {
+  /* else just use what we have */
+  content: attr(class);
+}
+
+code[class*="language-noop"]::before {
+  content: "";
+}
+
+code[class*="language-js"]::before {
+  content: "javascript";
+}
+
+code[class*="language-java"]::before {
+  content: "java";
+}
+
+code[class*="language-kotlin"]::before {
+  content: "kotlin";
+}
+
+code[class*="language-groovy"]::before {
+  content: "groovy";
+}
+
+code[class*="language-html"]::before {
+  content: "html";
+}
+
+code[class*="language-xml"]::before {
+  content: "xml";
+}
+
+code[class*="language-json"]::before {
+  content: "json";
+}
+
+blockquote.custom {
+  border-left-width: 0.25em;
+  border-left-style: solid;
+  border-right-width: 0.25em;
+  border-right-style: solid;
+  padding-top: 1em;
+  padding-bottom: 1em;
+}
+
+blockquote.custom h3::before {
+  content: "!";
+  position: absolute;
+  left: -1.75em;
+  border-radius: 50%;
+  width: 1.5em;
+  height: 1.5em;
+  text-align: center;
+  color: white;
+}
+
+/* special blockquote classes */
+blockquote.tip {
+  background: #f7fef9;
+  border-color: #00C853;
+}
+
+blockquote.custom h3 {
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+  font-size: 1.1em;
+  position: relative;
+}
+
+blockquote.tip h3 {
+  color: #00C853;
+}
+
+blockquote.tip h3::before {
+  background-color: #00C853;
+}
+
+blockquote.warning {
+  background: #fffff2;
+  border-color: #FFD600;
+}
+
+blockquote.warning h3 {
+  color: #FFD600;
+}
+
+blockquote.warning h3::before {
+  background-color: #FFD600;
+}
+
+blockquote.danger {
+  background: #fff4f1;
+  border-color: #ff3d00;
+}
+
+blockquote.danger h3 {
+  color: #ff3d00;
+}
+
+blockquote.danger h3::before {
+  background-color: #ff3d00;
+}
+
+footer {
+  margin-top: 2em;
+  background-color: #eee;
+  min-height: 4em;
+}
+
+.footer-content {
+  margin: 0 auto;
+  padding: 2em;
+  max-width: 50em;
+}
+
+.footer-content .svg-path {
+  fill: #566b78;
+}
+
+.footer-ref {
+  font-size: 0.9em;
+}
+
+.footer-ref svg {
+  width: 0.9em;
+  height: 0.9em;
+}
+
+.post-date {
+  text-align: end;
+  margin-top: 1em;
+  font-size: 0.8em;
+  color: #ccc;
+}
+
+.post-navigation {
+  display: flex;
+  margin-top: 2em;
+}
+
+.post-navigation .previous-page {
+  padding-right: 0.5em;
+}
+
+.post-navigation .post-navigation-item {
+  flex: 1;
+}
+
+.post-navigation .post-navigation-symbol {
+  display: block;
+}
+
+.post-navigation .next-page {
+  padding-left: 0.5em;
+  text-align: right;
+}
+
+.post-navigation-symbol {
+  color: #ccc;
+  font-size: 0.8em;
+}
+
+.page-item + .page-item {
+  margin-top: 2em;
+}
+
+.page-item + .page-item::before {
+  content: "* * *";
+  display: block;
+  text-align: center;
+  font-size: 2em;
+  color: #ccc;
+}
+
+.page-item-excerpt-label {
+  text-decoration: none;
+  border-style: solid;
+  border-width: 0.1em;
+  padding: 0.25em 0.5em;
+  font-size: 0.9em;
+  display: inline-block;
+}
+
+/**
+ * prism.js default theme for JavaScript, CSS and HTML
+ * Based on dabblet (http://dabblet.com)
+ * @author Lea Verou
+ */
+
+code[class*="language-"],
+pre[class*="language-"] {
+  color: black;
+  background: none;
+  text-shadow: 0 1px white;
+  font-family: Consolas, Monaco, "Andale Mono", "Ubuntu Mono", monospace;
+  font-size: 1em;
+  text-align: left;
+  white-space: pre;
+  word-spacing: normal;
+  word-break: normal;
+  word-wrap: normal;
+  line-height: 1.5;
+
+  -moz-tab-size: 4;
+  -o-tab-size: 4;
+  tab-size: 4;
+
+  -webkit-hyphens: none;
+  -moz-hyphens: none;
+  -ms-hyphens: none;
+  hyphens: none;
+}
+
+pre[class*="language-"]::-moz-selection,
+pre[class*="language-"] ::-moz-selection,
+code[class*="language-"]::-moz-selection,
+code[class*="language-"] ::-moz-selection {
+  text-shadow: none;
+  background: #b3d4fc;
+}
+
+pre[class*="language-"]::selection,
+pre[class*="language-"] ::selection,
+code[class*="language-"]::selection,
+code[class*="language-"] ::selection {
+  text-shadow: none;
+  background: #b3d4fc;
+}
+
+@media print {
+  code[class*="language-"],
+  pre[class*="language-"] {
+    text-shadow: none;
+  }
+}
+
+/* Code blocks */
+pre[class*="language-"] {
+  padding: 1em;
+  margin: 0.5em 0;
+  overflow: auto;
+}
+
+:not(pre) > code[class*="language-"],
+pre[class*="language-"] {
+  background: #f5f2f0;
+}
+
+/* Inline code */
+:not(pre) > code[class*="language-"] {
+  padding: 0.1em;
+  border-radius: 0.3em;
+  white-space: normal;
+}
+
+.token.comment,
+.token.prolog,
+.token.doctype,
+.token.cdata {
+  color: slategray;
+}
+
+.token.punctuation {
+  color: #999;
+}
+
+.namespace {
+  opacity: 0.7;
+}
+
+.token.property,
+.token.tag,
+.token.boolean,
+.token.number,
+.token.constant,
+.token.symbol,
+.token.deleted {
+  color: #905;
+}
+
+.token.selector,
+.token.attr-name,
+.token.string,
+.token.char,
+.token.builtin,
+.token.inserted {
+  color: #690;
+}
+
+.token.operator,
+.token.entity,
+.token.url,
+.language-css .token.string,
+.style .token.string {
+  color: #9a6e3a;
+  background: hsla(0, 0%, 100%, 0.5);
+}
+
+.token.atrule,
+.token.attr-value,
+.token.keyword {
+  color: #07a;
+}
+
+.token.function{
+  color: #dd4a68;
+}
+
+.token.regex,
+.token.important,
+.token.variable {
+  color: #e90;
+}
+
+.token.important,
+.token.bold {
+  font-weight: bold;
+}
+.token.italic {
+  font-style: italic;
+}
+
+.token.entity {
+  cursor: help;
+}
+
+.token.annotation {
+  color: #bbb438;
+}

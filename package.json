@@ -1,0 +1,17 @@
+{
+  "name": "blog-engine",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "commonmark": "^0.28.1",
+    "js-beautify": "^1.9.1",
+    "prismjs": "^1.16.0",
+    "yaml-front-matter": "^4.0.0"
+  }
+}

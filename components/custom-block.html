@@ -1,0 +1,4 @@
+<blockquote class="custom {{this.props.type || (()=>{throw `Unexpected type for custom block: ${this.props.type}`})() }}">
+    {{`<h3>${this.props.title || this.props.type.toUpperCase()}</h3>`}}
+    <p>{{this.props.text}}</p>
+</blockquote>
