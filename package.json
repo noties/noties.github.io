@@ -13,6 +13,7 @@
     "commonmark": "^0.28.1",
     "js-beautify": "^1.9.1",
     "prismjs": "^1.16.0",
+    "xmlbuilder": "^12.0.0",
     "yaml-front-matter": "^4.0.0"
   }
 }

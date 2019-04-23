@@ -143,7 +143,7 @@ const $globalFunctions = deepFreeze({
 // switch `/` and actual url for dev & prod builds
 const $site = deepFreeze({
     // url: 'https://noties.github.io',
-    url: '/',
+    url: 'https://noties.io',
     title: 'Di\'s blog',
     author: 'Dimitry Ivanov'
 });
@@ -596,6 +596,29 @@ const createPages = (distFolder, pages) => {
     pages.forEach(createPage);
 }
 
+const createRSS = (distFolder, pages) => {
+    const builder = require('xmlbuilder');
+    const json = {
+        'rss': {
+            '@version': '2.0',
+            'channel': {
+                'title': $site.title,
+                'link': $site.url,
+                'items': pages.slice().reverse().map(p => {
+                    return {
+                        'title': p.title,
+                        'description': p.description,
+                        'link': $site.url + p.url
+                    }
+                })
+            }
+        }
+    }
+    const rss = builder.create(json, { encoding: 'utf-8' }).end({ pretty: true });
+    const file = path.join(distFolder, 'rss.xml');
+    fs.writeFileSync(file, rss, { encoding: 'utf-8' });
+}
+
 const pages = renderPages();
 const index = renderIndex(pages);
 
@@ -606,3 +629,5 @@ copyPublicFiles(dist);
 createIndexFile(dist, index);
 
 createPages(dist, pages);
+
+createRSS(dist, pages);
