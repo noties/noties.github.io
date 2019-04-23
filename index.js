@@ -113,6 +113,30 @@ const $globalFunctions = deepFreeze({
             throw `Cannot find page{${file}} referenced in file{${this.$page.file}}`
         }
         return page;
+    },
+
+    $includeVideo(file) {
+
+        const poster = file + '-preview.jpg';
+        const video = file + '.mp4';
+
+        (() => {
+            const missing = [poster, video]
+                .filter(f => {
+                    return !fs.existsSync(path.join(__dirname, 'public', f));
+                });
+            if (missing && missing.length > 0) {
+                throw `Cannot include video, files missing: ${missing}`
+            }
+        })();
+
+        return `
+<video controls="true" loop poster="${this.$withBase(poster)}">
+    <source src="${this.$withBase(video)}" type="video/mp4">
+    You browser does not support mp4 playback, try downloading 
+    video file <a href="${this.$withBase(video)}">directly</a>
+</video>
+        `
     }
 })
 
@@ -191,6 +215,44 @@ const markdown = (() => {
         this.cr();
     };
 
+    const processInfo = (info) => {
+
+        if (!info) {
+            info = 'noop';
+        }
+
+        let outInfo;
+        let outLines;
+
+        const start = info.indexOf('{');
+        if (start >= 0) {
+            outInfo = info.substring(0, start);
+            outLines = info.substring(start + 1, info.length - 1)
+                .split(',')
+                .reduce((p, c) => {
+                    // 1,2,3,4-19
+                    const pairs = c.split('-');
+                    if (pairs.length === 1) {
+                        // single entry
+                        p.push(parseInt(pairs[0]));
+                    } else {
+                        for (let i = parseInt(pairs[0]), length = parseInt(pairs[1]); i <= length; i++) {
+                            p.push(i);
+                        }
+                    }
+                    return p;
+                }, [])
+                .sort();
+        } else {
+            outInfo = info;
+        }
+
+        return {
+            info: outInfo,
+            highlightLines: outLines
+        };
+    }
+
     return (content) => {
 
         const document = parser.parse(content);
@@ -202,11 +264,26 @@ const markdown = (() => {
             if (event.entering) {
                 node = event.node;
                 if ('code_block' === node.type) {
+
                     // we need language for styling
-                    if (!node.info) {
-                        node.info = 'noop';
+                    const { info, highlightLines } = processInfo(node.info);
+
+                    node.info = info;
+                    node.literal = highlight(info, node.literal);
+
+                    if (highlightLines) {
+                        const lines = node.literal.split('\n');
+                        const processed = []
+                        // 1-based to display, 0-based internally
+                        for (let i = 0; i < lines.length; i++) {
+                            if (highlightLines.indexOf(i + 1) >= 0) {
+                                processed.push(lines[i]);
+                            } else {
+                                processed.push(`<span class="code-fade">${lines[i]}</span>`);
+                            }
+                        }
+                        node.literal = processed.join('\n');
                     }
-                    node.literal = highlight(node.info, node.literal);
                 }
             }
         }

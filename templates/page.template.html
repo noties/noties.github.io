@@ -8,7 +8,7 @@
     <title>{{`${this.$page.title} | ${this.$site.title}`}}</title>
 
     {{ this.$include(this, 'includes/meta.include.html') }}
-    
+
     <script $>
         // meta tags
         [
@@ -52,7 +52,7 @@
 
             <div class="post-date">
                 <script $>
-                        `<em>${this.$formatDate(this.$page.date)}</em>`
+                    `<em>${this.$formatDate(this.$page.date)}</em>`
                 </script>
             </div>
 
@@ -87,6 +87,11 @@
                 }
             </script>
 
+        </div>
+        <div class="discuss" style="margin-top: 3em;">
+            <script src="https://utteranc.es/client.js" repo="noties/noties.github.io" issue-term="pathname" label="discuss"
+                theme="github-light" crossorigin="anonymous" async>
+            </script>
         </div>
     </main>
     {{ this.$include(this, 'includes/footer.include.html') }}

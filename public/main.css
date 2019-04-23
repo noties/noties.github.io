@@ -17,6 +17,49 @@ main {
   margin: 0 auto;
   padding: 4em 1em;
   max-width: 50em;
+  word-wrap: break-word;
+}
+
+main .content * {
+  max-width: 100%;
+}
+
+main video {
+  max-height: 82vh;
+}
+
+main img {
+  max-height: 82vh;
+}
+
+main table {
+  display: block;
+  overflow: auto;
+  width: 100%;
+  border-collapse: collapse;
+  border-spacing: 0;
+  margin-bottom: 16px;
+  margin-top: 0;
+}
+
+main table tr {
+  background-color: #fff;
+  border-top: 1px solid #c6cbd1;
+}
+
+main table th {
+  border: 1px solid #dfe2e5;
+  padding: 6px 13px;
+  font-weight: 600;
+}
+
+main table td {
+  border: 1px solid #dfe2e5;
+  padding: 6px 13px;
+}
+
+main table tr:nth-child(2n) {
+  background-color: #f6f8fa;
 }
 
 header {
@@ -242,7 +285,7 @@ blockquote.custom h3::before {
 /* special blockquote classes */
 blockquote.tip {
   background: #f7fef9;
-  border-color: #00C853;
+  border-color: #00c853;
 }
 
 blockquote.custom h3 {
@@ -253,24 +296,24 @@ blockquote.custom h3 {
 }
 
 blockquote.tip h3 {
-  color: #00C853;
+  color: #00c853;
 }
 
 blockquote.tip h3::before {
-  background-color: #00C853;
+  background-color: #00c853;
 }
 
 blockquote.warning {
   background: #fffff2;
-  border-color: #FFD600;
+  border-color: #ffd600;
 }
 
 blockquote.warning h3 {
-  color: #FFD600;
+  color: #ffd600;
 }
 
 blockquote.warning h3::before {
-  background-color: #FFD600;
+  background-color: #ffd600;
 }
 
 blockquote.danger {
@@ -345,6 +388,10 @@ footer {
   font-size: 0.8em;
 }
 
+.page-item * {
+  max-width: 100%;
+}
+
 .page-item + .page-item {
   margin-top: 2em;
 }
@@ -364,6 +411,10 @@ footer {
   padding: 0.25em 0.5em;
   font-size: 0.9em;
   display: inline-block;
+}
+
+.code-fade {
+  opacity: 0.25;
 }
 
 /**
@@ -487,7 +538,7 @@ pre[class*="language-"] {
   color: #07a;
 }
 
-.token.function{
+.token.function {
   color: #dd4a68;
 }
 
