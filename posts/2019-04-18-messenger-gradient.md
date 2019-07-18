@@ -493,6 +493,6 @@ The same _optimization_ can be also applied to the `clipPath` method which will 
 
 
 ## What's next
-We have covered single use-case when all chat messages have rectangular background. And it shows basic principles of fixed scrolling gradient background for Android. But it's missing one _minor_ detail &mdash; rounded corners&hellip; We will deal with them in the next article. Stay tuned.
+We have covered single use-case when all chat messages have rectangular background. And it shows basic principles of fixed scrolling gradient background for Android. But it's missing one _minor_ detail &mdash; rounded corners&hellip; We will deal with them in the next article. [Stay tuned (part 2)]({{ this.$withBase(this.$findPage('2019-05-18-messenger-gradient-2.md').url) }}).
 
 [source code](https://github.com/noties/BlogProjects/tree/master/01-GradientMessenger)

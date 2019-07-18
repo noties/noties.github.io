@@ -150,7 +150,7 @@ pre code {
 }
 
 code {
-  vertical-align: text-bottom;
+  /* vertical-align: text-bottom; */
   width: 100%;
   font-size: 1.1em;
 }
