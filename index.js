@@ -604,10 +604,11 @@ const createRSS = (distFolder, pages) => {
             'channel': {
                 'title': $site.title,
                 'link': $site.url,
+                'description': $site.title,
                 'items': pages.slice().reverse().map(p => {
                     return {
                         'title': p.title,
-                        'description': p.description,
+                        'description': '',
                         'link': $site.url + p.url
                     }
                 })
