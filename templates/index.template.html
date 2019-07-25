@@ -32,7 +32,7 @@
                             <div class="page-item-content">
                                 ${p.excerpt || p.content}
                             </div>
-                            ${(p.excerpt && `<a class="page-item-excerpt-label" href="${this.$withBase(p.url)}">${p.excerptLabel}</a>`) || ''}
+                            ${(p.excerpt && `<a class="page-item-excerpt-label" href="${this.$withBase(p.url)}#excerpt-continue">${p.excerptLabel}</a>`) || ''}
                         </div>
                         `
                     })

@@ -385,7 +385,7 @@ const processExcerpt = (content) => {
     if (result) {
         const excerpt = content.substring(0, result.index);
         return {
-            content: excerpt + content.substring(result.index + result[0].length),
+            content: excerpt + '<p id="excerpt-continue"></p>' + content.substring(result.index + result[0].length),
             excerpt,
             excerptLabel: result[1] || 'Continue'
         }
