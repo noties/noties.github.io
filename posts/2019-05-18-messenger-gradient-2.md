@@ -124,10 +124,15 @@ class MessageDecoration(
 }
 ```
 
-> **Note**
-> Unlike previous article we are using `Path` for clipping as we want to have rounded corners for our chat messages. This cannot be achieved with a regular `canvas.clipRoundRect` method because:
-> * it does not exist in Android API
-> * (but even if it did) we want to have different corners to have different radius
+<blockquote class="custom warning">
+<h3>Note</h3>
+
+Unlike previous article we are using <code>Path</code> for clipping as we want to have rounded corners for our chat messages. This cannot be achieved with a regular <code>canvas.clipRoundRect</code> method because:
+<ul>
+<li>it does not exist in Android API
+<li>(but even if it did) we want to have different corners to have different radius
+</ul>
+</blockquote>
 
 We will re-use most of the view-finding logic from the [previous] article:
 

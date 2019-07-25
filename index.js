@@ -605,11 +605,12 @@ const createRSS = (distFolder, pages) => {
                 'title': $site.title,
                 'link': $site.url,
                 'description': $site.title,
-                'items': pages.slice().reverse().map(p => {
+                'item': pages.slice().reverse().map(p => {
                     return {
                         'title': p.title,
                         'description': '',
-                        'link': $site.url + p.url
+                        'link': $site.url + p.url,
+                        'pubDate': $globalFunctions.$formatDate(p.date)
                     }
                 })
             }
