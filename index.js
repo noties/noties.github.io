@@ -598,6 +598,11 @@ const createPages = (distFolder, pages) => {
 
 const createRSS = (distFolder, pages) => {
     const builder = require('xmlbuilder');
+    const rfc822 = (date) => {
+        const weekday = date.toLocaleDateString('en-US', { weekday: 'short' });
+        const month = date.toLocaleDateString('en-US', { month: 'short' });
+        return `${weekday}, ${date.getDate()} ${month} ${date.getFullYear()}`
+    }
     const json = {
         'rss': {
             '@version': '2.0',
@@ -610,7 +615,7 @@ const createRSS = (distFolder, pages) => {
                         'title': p.title,
                         'description': '',
                         'link': $site.url + p.url,
-                        'pubDate': $globalFunctions.$formatDate(p.date)
+                        'pubDate': rfc822(p.date)
                     }
                 })
             }
