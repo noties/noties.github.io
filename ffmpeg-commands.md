@@ -15,7 +15,7 @@ ffmpeg -i 1.mp4 -i palette.png -filter_complex "fps=12,scale=320:-1:flags=lanczo
 ## Generated webm
 ```
 ffmpeg -fflags +genpts -i 1.mp4 -r 24 -vf scale=450:800 1.webm
-ffmpeg -fflags +genpts -i 1.mp4 -r 24 -vf scale=450:853 1.mp4
+ffmpeg -fflags +genpts -i 0.mp4 -r 24 -vf scale=450:800 1.mp4
 ```
 
 ## Generate preview (first frame)
