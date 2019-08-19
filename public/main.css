@@ -262,6 +262,10 @@ code[class*="language-json"]::before {
   content: "json";
 }
 
+code[class*="language-sql"]::before {
+  content: "SQL";
+}
+
 blockquote.custom {
   border-left-width: 0.25em;
   border-left-style: solid;

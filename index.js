@@ -402,6 +402,39 @@ const preparePage = (pages, page) => {
     // * title
     // * date
     // * url
+    // UPD, we are copying too much information when we have date in the file-name...
+
+    // if date and url are present -> use them, else extract from file-name
+    (() => {
+
+        const hasDate = !!page.date
+        const hasUrl = !!page.url
+
+        if (!hasDate || !hasUrl) {
+
+            const match = /^(\d{4}\-\d{2}\-\d{2})\-(.+)\.md/.exec(page.file)
+
+            if (!match) {
+                throw `Filename{${page.file}} does not follow naming pattern nor contains 'date' or 'url' frontmatter properties`
+            }
+
+            if (!hasDate) {
+                page = {
+                    ...page,
+                    date: new Date(match[1])
+                }
+            }
+
+            if (!hasUrl) {
+                const url = '/blog/' + (match[1].split('-').join('/')) + '/' + match[2] + '/index.html'
+                page = {
+                    ...page,
+                    url: url
+                }
+            }
+        }
+    })();
+
     (() => {
         const missing = ['file', 'directory', 'title', 'date', 'url'].filter(s => !(s in page))
         if (missing.length > 0) {
