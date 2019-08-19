@@ -1,0 +1,52 @@
+<script>
+
+    const videos = document.querySelectorAll('video');
+
+    if (videos && videos.length > 0) {
+
+        // https://stackoverflow.com/a/7557433/6745174
+
+        const isElementInViewPort = (element) => {
+
+            const rect = element.getBoundingClientRect();
+            const viewPort = {
+                left: 0,
+                top: 0,
+                right: (window.innerWidth || document.documentElement.clientWidth),
+                bottom: (window.innerHeight || document.documentElement.clientHeight)
+            }
+
+            console.log(element, rect, viewPort);
+
+            // we should look for overlapping, so if a part is visible in view-port, we
+            // consider element to be also visible
+            return (
+                (rect.left < viewPort.right)
+                && (viewPort.left < rect.right)
+                && (rect.top < viewPort.bottom)
+                && (viewPort.top < rect.bottom)
+            );
+        };
+
+        const isPlaying = (element) => {
+            return (
+                element.currentTime > 0
+                && !element.paused
+                && !element.ended
+            );
+        };
+
+        const handler = (event) => {
+            for (video of videos) {
+                if (isPlaying(video) && !isElementInViewPort(video)) {
+                    video.pause()
+                }
+            }
+        };
+
+        window.addEventListener('DOMContentLoaded', handler);
+        window.addEventListener('load', handler);
+        window.addEventListener('resize', handler);
+        window.addEventListener('scroll', handler);
+    }
+</script>

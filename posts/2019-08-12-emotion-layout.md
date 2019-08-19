@@ -2,7 +2,7 @@
 title: EmotionLayout
 url: /blog/2019/08/12/emotion-layout/index.html
 date: 2019-08-12
-draft: true
+draft: false
 ---
 
 I've stumbled upon an interesting UI effect by [Chris Banes](https://twitter.com/chrisbanes/status/1029619278863945728) implemented with `MotionLayout`.  Unfortunately... well. Unfortunately it's `MotionLayout`, so _motions_ are defined in XML scene files sprinkled with constrains and references to views. If you haven't seen one &mdash; go ahead and see [the one that defines UI effect in question](https://github.com/chrisbanes/tivi/blob/3c1ce720ed4bda2c2d3d28320ae0e66a6701e402/app/src/main/res/xml/scene_show_details.xml). Now, there must be a simpler way...
@@ -51,7 +51,7 @@ This should give us the result:
 
 Now, that XML part is done... 😄, let's add some code:
 
-```kotlin{16-37}
+```kotlin{16-38}
 class MainActivity : Activity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -72,6 +72,7 @@ class MainActivity : Activity() {
             // when reached half of possible scroll we _flip_ view order and animate the other way
             val half = maxY / 2F
 
+            // change drawing order of poster view
             image.translationZ = if (y <= half) {
                 1F
             } else {
@@ -85,7 +86,7 @@ class MainActivity : Activity() {
                 -(height / 2F) * (y / half)
             } else {
                 // initial starting position is -(height / 2F) - which first half is finishing at
-                // then we multiple view height (no half of it to faster movement) by distance ratio
+                // then we multiply by view height (not half of it for faster movement) by distance ratio
                 -(height / 2F) + (height * ((y - half) / half))
             }
         }
@@ -98,6 +99,13 @@ class MainActivity : Activity() {
 ## Pre-Lollipop(21) era
 
 You might've noticed we are using `translationZ` property to define drawing order of views which is not supported on devices lower than Lollipop (21). For such devices we can rely on _natural_ drawing order of views inside a `ViewGroup` &mdash; `getChildAt(0)` is drawn first, `getChildAt(count - 1)` is drawn last. Let's create a simple utility class:
+
+<blockquote class="custom tip">
+
+Please note that version based on `MotionLayout` has no such workaround. In fact &mdash; its minimum SDK is 23 (Marshmallow)
+
+</blockquote>
+
 
 ```kotlin
 interface DrawingOrder {
@@ -214,12 +222,16 @@ class MainActivity : Activity() {
 }
 ```
 
-In general I find `MotionLayout` not good enough to quickly validate an idea, tweak 
-things and get feedback fast. Moreover it introduces another entity that is
-_losely_ coupled with other components increasing mental .. 
-Updating/tweaking/resolving issues is big pain point
-constraints (duplicate? in original and motion)
-step in a different direction from minimizing scope whilst decoupling components
+---
+
+`MotionLayout` is a good piece of software and it has its own usages. Unfortunately
+it also has downsides:
+* animations created with it are not _portable_ to/from other platforms
+* _motion_ definition is filled with XML constraints and references ids that are not present
+in definition itself thus creating confusing and error-prone environment
+* understanding (reading) and updating (modifying) _motions_ can be a compelling task for a new-comer
+* and it's certainly not fast in terms of development &mdash; having a visual result
+can take a lot of time thus making `MotionLayout` a _not-so-perfect_ candidate for quick UI experiments
 
 Source code can be found [here][source]
 
