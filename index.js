@@ -659,6 +659,40 @@ const createRSS = (distFolder, pages) => {
     fs.writeFileSync(file, rss, { encoding: 'utf-8' });
 }
 
+const createSitemap = (dist, pages) => {
+    const builder = require('xmlbuilder');
+    const json = {
+        'urlset': {
+            '@xsi:schemaLocation': 'http://www.sitemaps.org/schemas/sitemap/0.9',
+            'url': [
+                {
+                    'loc': 'https://noties.io/',
+                    'priority': '1.0',
+                    'lastmod': new Date().toISOString(),
+                    'changefreq': 'weekly'
+                },
+                ...pages.slice().reverse().map(p => {
+                    return {
+                        'loc': $site.url + p.url,
+                        'priority': '0.8',
+                        'lastmod': fs.statSync(p.path).mtime.toISOString(),
+                        'changefreq': 'monthly'
+                    }
+                })
+            ]
+        }
+    };
+    const sitemap = builder.create(json, { encoding: 'utf-8' }).end({ pretty: true });
+    const file = path.join(dist, 'sitemap.xml');
+    fs.writeFileSync(file, sitemap, { ending: 'utf-8' });
+
+    const robots = `User-agent: *
+Sitemap: http://noties.io/sitemap.xml
+`;
+    const robotsTxt = path.join(dist, 'robots.txt');
+    fs.writeFileSync(robotsTxt, robots, { encoding: 'utf-8' });
+}
+
 const pages = renderPages();
 const index = renderIndex(pages);
 
@@ -671,3 +705,5 @@ createIndexFile(dist, index);
 createPages(dist, pages);
 
 createRSS(dist, pages);
+
+createSitemap(dist, pages);
