@@ -250,6 +250,10 @@ code[class*="language-groovy"]::before {
   content: "groovy";
 }
 
+code[class*="language-diff"]::before {
+  content: "diff";
+}
+
 code[class*="language-html"]::before {
   content: "html";
 }
