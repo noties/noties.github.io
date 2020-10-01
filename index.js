@@ -351,6 +351,10 @@ const extractPages = (() => {
 
     const frontMatter = require('yaml-front-matter');
 
+    const includeFile = (file) => {
+        return file !== '.DS_Store';
+    }
+
     const func = (dir) => {
         let pages = [];
         if (fs.existsSync(dir)) {
@@ -359,13 +363,16 @@ const extractPages = (() => {
                 if (fs.lstatSync(p).isDirectory()) {
                     pages = pages.concat(func(p));
                 } else {
-                    // so, frontmatter should not define these properties: file, directory, path
-                    pages.push({
-                        ...frontMatter.loadFront(readFileSync(f, dir)),
-                        file: f,
-                        directory: dir,
-                        path: p
-                    });
+                    // filter
+                    if (includeFile(f)) {
+                        // so, frontmatter should not define these properties: file, directory, path
+                        pages.push({
+                            ...frontMatter.loadFront(readFileSync(f, dir)),
+                            file: f,
+                            directory: dir,
+                            path: p
+                        });
+                    }
                 }
             });
         }

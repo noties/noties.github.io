@@ -164,7 +164,7 @@ android/app/ActionBar$Tab
 -   setCustomView(LView;)LTab;
 -   setIcon(I)LTab;
 -   setIcon(LDrawable;)LTab;
--   setTabLTabListener;)LTab;
+-   setTabListener(LTabListener;)LTab;
 -   setTag(LObject;)LTab;
 -   setText(I)LTab;
 -   setText(LCharSequence;)LTab;
@@ -185,9 +185,9 @@ android/app/Activity
 +   onPerformDirectAction(LString;LBundle;LCancellationSignal;LConsumer;)V
 -   onStateNotSaved()V
 +   onTopResumedActivityChanged(Z)V
-+   registerActivityLActivityLifecycleCallbacks;)V
++   registerActivityLifecycleCallbacks(LActivityLifecycleCallbacks;)V
 +   setInheritShowWhenLocked(Z)V
-+   unregisterActivityLActivityLifecycleCallbacks;)V
++   unregisterActivityLifecycleCallbacks(LActivityLifecycleCallbacks;)V
 ```
 
 
@@ -196,7 +196,7 @@ android/app/ActivityGroup
 -   <init>()V
 -   <init>(Z)V
 -   getCurrentActivity()LActivity;
--   getLLocalActivityManager;
+-   getLocalActivityManager()LLocalActivityManager;
 ```
 
 
@@ -228,7 +228,7 @@ android/app/ActivityManager$RunningTaskInfo
 
 ```diff
 android/app/AppComponentFactory
-+   instantiateClassLClassLoader;LApplicationInfo;)LClassLoader;
++   instantiateClassLoader(LClassLoader;LApplicationInfo;)LClassLoader;
 ```
 
 
@@ -338,7 +338,7 @@ android/app/Fragment
 -   getFragmentManager()LFragmentManager;
 -   getHost()LObject;
 -   getId()I
--   getLLayoutInflater;
+-   getLayoutInflater()LLayoutInflater;
 -   getParentFragment()LFragment;
 -   getReenterTransition()LTransition;
 -   getResources()LResources;
@@ -377,7 +377,7 @@ android/app/Fragment
 -   onDestroyOptionsMenu()V
 -   onDestroyView()V
 -   onDetach()V
--   onGetLBundle;)LLayoutInflater;
+-   onGetLayoutInflater(LBundle;)LLayoutInflater;
 -   onHiddenChanged(Z)V
 -   onInflate(LContext;LAttributeSet;LBundle;)V
 -   onMultiWindowModeChanged(ZLConfiguration;)V
@@ -443,7 +443,7 @@ android/app/FragmentBreadCrumbs
 -   <init>(LContext;LAttributeSet;I)V
 -   setActivity(LActivity;)V
 -   setMaxVisible(I)V
--   setOnBreadCrumbClickLOnBreadCrumbClickListener;)V
+-   setOnBreadCrumbClickListener(LOnBreadCrumbClickListener;)V
 -   setParentTitle(LCharSequence;LCharSequence;LOnClickListener;)V
 -   setTitle(LCharSequence;LCharSequence;)V
 ```
@@ -488,17 +488,17 @@ android/app/FragmentController
 -   doLoaderDestroy()V
 -   doLoaderStart()V
 -   doLoaderStop(Z)V
--   dumpLString;LFileDescriptor;LPrintWriter;[LString;)V
+-   dumpLoaders(LString;LFileDescriptor;LPrintWriter;[LString;)V
 -   execPendingActions()Z
 -   findFragmentByWho(LString;)LFragment;
 -   getFragmentManager()LFragmentManager;
--   getLLoaderManager;
+-   getLoaderManager()LLoaderManager;
 -   noteStateNotSaved()V
 -   onCreateView(LView;LString;LContext;LAttributeSet;)LView;
 -   reportLoaderStart()V
 -   restoreAllState(LParcelable;LFragmentManagerNonConfig;)V
--   restoreLArrayMap;)V
--   retainLArrayMap;
+-   restoreLoaderNonConfig(LArrayMap;)V
+-   retainLoaderNonConfig()LArrayMap;
 -   retainNestedNonConfig()LFragmentManagerNonConfig;
 -   saveAllState()LParcelable;
 ```
@@ -510,7 +510,7 @@ android/app/FragmentHostCallback
 -   onAttachFragment(LFragment;)V
 -   onDump(LString;LFileDescriptor;LPrintWriter;[LString;)V
 -   onGetHost()LObject;
--   onGetLLayoutInflater;
+-   onGetLayoutInflater()LLayoutInflater;
 -   onGetWindowAnimations()I
 -   onHasWindowAnimations()Z
 -   onInvalidateOptionsMenu()V
@@ -526,7 +526,7 @@ android/app/FragmentHostCallback
 android/app/FragmentManager
 -   POP_BACK_STACK_INCLUSIVE
 -   <init>()V
--   addOnBackStackChangedLOnBackStackChangedListener;)V
+-   addOnBackStackChangedListener(LOnBackStackChangedListener;)V
 -   beginTransaction()LFragmentTransaction;
 -   dump(LString;LFileDescriptor;LPrintWriter;[LString;)V
 -   enableDebugLogging(Z)V
@@ -548,10 +548,10 @@ android/app/FragmentManager
 -   popBackStackImmediate(II)Z
 -   popBackStackImmediate(LString;I)Z
 -   putFragment(LBundle;LString;LFragment;)V
--   registerFragmentLFragmentLifecycleCallbacks;Z)V
--   removeOnBackStackChangedLOnBackStackChangedListener;)V
+-   registerFragmentLifecycleCallbacks(LFragmentLifecycleCallbacks;Z)V
+-   removeOnBackStackChangedListener(LOnBackStackChangedListener;)V
 -   saveFragmentInstanceState(LFragment;)LSavedState;
--   unregisterFragmentLFragmentLifecycleCallbacks;)V
+-   unregisterFragmentLifecycleCallbacks(LFragmentLifecycleCallbacks;)V
 ```
 
 
@@ -657,13 +657,13 @@ android/app/KeyguardManager$OnKeyguardExitResult
 ```diff
 android/app/ListFragment
 -   <init>()V
--   getLListAdapter;
--   getLListView;
+-   getListAdapter()LListAdapter;
+-   getListView()LListView;
 -   getSelectedItemId()J
 -   getSelectedItemPosition()I
--   onLListView;LView;IJ)V
+-   onListItemClick(LListView;LView;IJ)V
 -   setEmptyText(LCharSequence;)V
--   setLListAdapter;)V
+-   setListAdapter(LListAdapter;)V
 -   setListShown(Z)V
 -   setListShownNoAnimation(Z)V
 -   setSelection(I)V
@@ -676,17 +676,17 @@ android/app/LoaderManager
 -   destroyLoader(I)V
 -   dump(LString;LFileDescriptor;LPrintWriter;[LString;)V
 -   enableDebugLogging(Z)V
--   getLLoader;
--   initLBundle;LLoaderCallbacks;)LLoader;
--   restartLBundle;LLoaderCallbacks;)LLoader;
+-   getLoader(I)LLoader;
+-   initLoader(ILBundle;LLoaderCallbacks;)LLoader;
+-   restartLoader(ILBundle;LLoaderCallbacks;)LLoader;
 ```
 
 
 ```diff
 android/app/LoaderManager$LoaderCallbacks
--   onCreateLBundle;)LLoader;
--   onLLoader;)V
--   onLLoader;LObject;)V
+-   onCreateLoader(ILBundle;)LLoader;
+-   onLoadFinished(LLoader;LObject;)V
+-   onLoaderReset(LLoader;)V
 ```
 
 
@@ -713,7 +713,7 @@ android/app/Notification
 +   FLAG_BUBBLE
 +   getAllowSystemGeneratedContextualActions()Z
 +   getBubbleMetadata()LBubbleMetadata;
-+   getLLocusId;
++   getLocusId()LLocusId;
 ```
 
 
@@ -725,7 +725,7 @@ android/app/Notification$Action
 
 ```diff
 android/app/Notification$Action$Builder
-+   setContextual(Z)LBuilder;
++   setContextual(Z)Landroid/app/Notification$Action$Builder;
 ```
 
 
@@ -743,7 +743,7 @@ android/app/Notification$Action$Builder
 android/app/Notification$Builder
 +   setAllowSystemGeneratedContextualActions(Z)LBuilder;
 +   setBubbleMetadata(LBubbleMetadata;)LBuilder;
-+   setLLocusId;)LBuilder;
++   setLocusId(LLocusId;)LBuilder;
 ```
 
 
@@ -943,13 +943,13 @@ android/app/admin/DevicePolicyManager
 +   PROVISIONING_MODE_FULLY_MANAGED_DEVICE
 +   PROVISIONING_MODE_MANAGED_PROFILE
 +   WIPE_SILENTLY
-+   getAlwaysOnVpnLComponentName;)LSet;
++   getAlwaysOnVpnLockdownWhitelist(LComponentName;)LSet;
 +   getCrossProfileCalendarPackages(LComponentName;)LSet;
 +   getGlobalPrivateDnsHost(LComponentName;)LString;
 +   getGlobalPrivateDnsMode(LComponentName;)I
 +   getPasswordComplexity()I
 +   installSystemUpdate(LComponentName;LUri;LExecutor;LInstallSystemUpdateCallback;)V
-+   isAlwaysOnVpnLComponentName;)Z
++   isAlwaysOnVpnLockdownEnabled(LComponentName;)Z
 +   setAlwaysOnVpnPackage(LComponentName;LString;ZLSet;)V
 +   setCrossProfileCalendarPackages(LComponentName;LSet;)V
 +   setDefaultSmsApplication(LComponentName;LString;)V
@@ -1005,15 +1005,15 @@ android/appwidget/AppWidgetHostView
 
 ```diff
 android/bluetooth/BluetoothAdapter
-+   listenUsingInsecureLBluetoothServerSocket;
-+   listenUsingLBluetoothServerSocket;
++   listenUsingInsecureL2capChannel()LBluetoothServerSocket;
++   listenUsingL2capChannel()LBluetoothServerSocket;
 ```
 
 
 ```diff
 android/bluetooth/BluetoothDevice
-+   createInsecureLBluetoothSocket;
-+   createLBluetoothSocket;
++   createInsecureL2capChannel(I)LBluetoothSocket;
++   createL2capChannel(I)LBluetoothSocket;
 ```
 
 
@@ -1101,7 +1101,7 @@ android/content/AsyncTaskLoader
 -   isLoadInBackgroundCanceled()Z
 -   loadInBackground()LObject;
 -   onCanceled(LObject;)V
--   onLObject;
+-   onLoadInBackground()LObject;
 -   setUpdateThrottle(J)V
 ```
 
@@ -1232,15 +1232,15 @@ android/content/Loader
 -   onReset()V
 -   onStartLoading()V
 -   onStopLoading()V
--   registerLOnLoadCompleteListener;)V
--   registerOnLOnLoadCanceledListener;)V
+-   registerListener(ILOnLoadCompleteListener;)V
+-   registerOnLoadCanceledListener(LOnLoadCanceledListener;)V
 -   reset()V
 -   rollbackContentChanged()V
 -   startLoading()V
 -   stopLoading()V
 -   takeContentChanged()Z
--   unregisterLOnLoadCompleteListener;)V
--   unregisterOnLOnLoadCanceledListener;)V
+-   unregisterListener(LOnLoadCompleteListener;)V
+-   unregisterOnLoadCanceledListener(LOnLoadCanceledListener;)V
 ```
 
 
@@ -1252,13 +1252,13 @@ android/content/Loader$ForceLoadContentObserver
 
 ```diff
 android/content/Loader$OnLoadCanceledListener
--   onLLoader;)V
+-   onLoadCanceled(LLoader;)V
 ```
 
 
 ```diff
 android/content/Loader$OnLoadCompleteListener
--   onLLoader;LObject;)V
+-   onLoadComplete(LLoader;LObject;)V
 ```
 
 
@@ -1432,14 +1432,14 @@ android/content/pm/ServiceInfo
 
 ```diff
 android/content/pm/ShortcutInfo
-+   getLLocusId;
++   getLocusId()LLocusId;
 ```
 
 
 ```diff
 android/content/pm/ShortcutInfo$Builder
-+   setLBuilder;
-+   setLLocusId;)LBuilder;
++   setLocusId(LLocusId;)LBuilder;
++   setLongLived(Z)LBuilder;
 +   setPerson(LPerson;)LBuilder;
 +   setPersons([LPerson;)LBuilder;
 ```
@@ -1498,7 +1498,7 @@ android/database/DatabaseUtils$InsertHelper
 
 ```diff
 android/database/sqlite/SQLiteDatabase$OpenParams$Builder
--   setIdleConnectionTimeout(J)LBuilder;
+-   setIdleConnectionTimeout(J)Landroid/database/sqlite/SQLiteDatabase$OpenParams$Builder;
 ```
 
 
@@ -1823,14 +1823,14 @@ android/hardware/Camera
 -   setAutoFocusMoveCallback(LAutoFocusMoveCallback;)V
 -   setDisplayOrientation(I)V
 -   setErrorCallback(LErrorCallback;)V
--   setFaceDetectionLFaceDetectionListener;)V
+-   setFaceDetectionListener(LFaceDetectionListener;)V
 -   setOneShotPreviewCallback(LPreviewCallback;)V
 -   setParameters(LParameters;)V
 -   setPreviewCallback(LPreviewCallback;)V
 -   setPreviewCallbackWithBuffer(LPreviewCallback;)V
 -   setPreviewDisplay(LSurfaceHolder;)V
 -   setPreviewTexture(LSurfaceTexture;)V
--   setZoomChangeLOnZoomChangeListener;)V
+-   setZoomChangeListener(LOnZoomChangeListener;)V
 -   startFaceDetection()V
 -   startPreview()V
 -   startSmoothZoom(I)V
@@ -2501,16 +2501,16 @@ android/inputmethodservice/InputMethodService
 -   <init>(LContext;LAttributeSet;II)V
 -   closing()V
 -   getKeyboard()LKeyboard;
--   getOnKeyboardActionLOnKeyboardActionListener;
+-   getOnKeyboardActionListener()LOnKeyboardActionListener;
 -   handleBack()Z
 -   invalidateAllKeys()V
 -   invalidateKey(I)V
 -   isPreviewEnabled()Z
 -   isProximityCorrectionEnabled()Z
 -   isShifted()Z
--   onLKey;)Z
+-   onLongPress(LKey;)Z
 -   setKeyboard(LKeyboard;)V
--   setOnKeyboardActionLOnKeyboardActionListener;)V
+-   setOnKeyboardActionListener(LOnKeyboardActionListener;)V
 -   setPopupOffset(II)V
 -   setPopupParent(LView;)V
 -   setPreviewEnabled(Z)V
@@ -2615,7 +2615,7 @@ android/location/LocationManager
 +   EXTRA_PROVIDER_NAME
 -   KEY_STATUS_CHANGED
 -   clearTestProviderEnabled(LString;)V
--   clearTestProviderLString;)V
+-   clearTestProviderLocation(LString;)V
 -   clearTestProviderStatus(LString;)V
 -   setTestProviderStatus(LString;ILBundle;J)V
 ```
@@ -2906,16 +2906,16 @@ android/media/MediaDrm
 +   clearOnExpirationUpdateListener()V
 +   clearOnKeyStatusChangeListener()V
 +   clearOnSessionLostStateListener()V
-+   getOfflineLList;
++   getOfflineLicenseKeySetIds()LList;
 +   getOfflineLicenseState([B)I
 +   isCryptoSchemeSupported(LUUID;LString;I)Z
 +   removeOfflineLicense([B)V
-+   setOnEventLExecutor;LOnEventListener;)V
-+   setOnEventLOnEventListener;LHandler;)V
-+   setOnExpirationUpdateLExecutor;LOnExpirationUpdateListener;)V
-+   setOnKeyStatusChangeLExecutor;LOnKeyStatusChangeListener;)V
-+   setOnSessionLExecutor;LOnSessionLostStateListener;)V
-+   setOnSessionLOnSessionLostStateListener;LHandler;)V
++   setOnEventListener(LExecutor;LOnEventListener;)V
++   setOnEventListener(LOnEventListener;LHandler;)V
++   setOnExpirationUpdateListener(LExecutor;LOnExpirationUpdateListener;)V
++   setOnKeyStatusChangeListener(LExecutor;LOnKeyStatusChangeListener;)V
++   setOnSessionLostStateListener(LExecutor;LOnSessionLostStateListener;)V
++   setOnSessionLostStateListener(LOnSessionLostStateListener;LHandler;)V
 ```
 
 
@@ -2976,7 +2976,7 @@ android/media/MediaFormat
 +   getFloat(LString;F)F
 +   getInteger(LString;I)I
 +   getKeys()LSet;
-+   getLString;J)J
++   getLong(LString;J)J
 +   getNumber(LString;)LNumber;
 +   getNumber(LString;LNumber;)LNumber;
 +   getString(LString;LString;)LString;
@@ -3000,7 +3000,7 @@ android/media/MediaMetadataEditor
 -   getObject(ILObject;)LObject;
 -   getString(ILString;)LString;
 -   putBitmap(ILBitmap;)LMediaMetadataEditor;
--   putLMediaMetadataEditor;
+-   putLong(IJ)LMediaMetadataEditor;
 -   putObject(ILObject;)LMediaMetadataEditor;
 -   putString(ILString;)LMediaMetadataEditor;
 -   removeEditableKeys()V
@@ -3106,9 +3106,9 @@ android/media/RemoteControlClient
 -   <init>(LPendingIntent;LLooper;)V
 -   editMetadata(Z)LMetadataEditor;
 -   getMediaSession()LMediaSession;
--   setMetadataUpdateLOnMetadataUpdateListener;)V
--   setOnGetPlaybackPositionLOnGetPlaybackPositionListener;)V
--   setPlaybackPositionUpdateLOnPlaybackPositionUpdateListener;)V
+-   setMetadataUpdateListener(LOnMetadataUpdateListener;)V
+-   setOnGetPlaybackPositionListener(LOnGetPlaybackPositionListener;)V
+-   setPlaybackPositionUpdateListener(LOnPlaybackPositionUpdateListener;)V
 -   setPlaybackState(I)V
 -   setPlaybackState(IJF)V
 -   setTransportControlFlags(I)V
@@ -3121,7 +3121,7 @@ android/media/RemoteControlClient$MetadataEditor
 -   apply()V
 -   clear()V
 -   putBitmap(ILBitmap;)LMetadataEditor;
--   putLMetadataEditor;
+-   putLong(IJ)LMetadataEditor;
 -   putObject(ILObject;)LMetadataEditor;
 -   putString(ILString;)LMetadataEditor;
 ```
@@ -3264,11 +3264,11 @@ android/media/session/MediaSession$Callback
 
 ```diff
 android/media/session/MediaSessionManager
-+   addOnSession2TokensChangedLOnSession2TokensChangedListener;)V
-+   addOnSession2TokensChangedLOnSession2TokensChangedListener;LHandler;)V
++   addOnSession2TokensChangedListener(LOnSession2TokensChangedListener;)V
++   addOnSession2TokensChangedListener(LOnSession2TokensChangedListener;LHandler;)V
 +   getSession2Tokens()LList;
 +   notifySession2Created(LSession2Token;)V
-+   removeOnSession2TokensChangedLOnSession2TokensChangedListener;)V
++   removeOnSession2TokensChangedListener(LOnSession2TokensChangedListener;)V
 ```
 
 
@@ -3356,7 +3356,7 @@ android/net/LinkProperties
 +   setDomains(LString;)V
 +   setHttpProxy(LProxyInfo;)V
 +   setInterfaceName(LString;)V
-+   setLCollection;)V
++   setLinkAddresses(LCollection;)V
 +   setMtu(I)V
 ```
 
@@ -3602,7 +3602,7 @@ android/net/wifi/WifiManager
 -   WIFI_MODE_SCAN_ONLY
 -   addNetwork(LWifiConfiguration;)I
 +   addNetworkSuggestions(LList;)I
--   createWifiLString;)LWifiLock;
+-   createWifiLock(LString;)LWifiLock;
 -   disableNetwork(I)Z
 -   disconnect()Z
 -   enableNetwork(IZ)Z
@@ -3734,7 +3734,7 @@ android/net/wifi/p2p/WifiP2pManager
 
 ```diff
 android/net/wifi/rtt/RangingResult
-+   getUnverifiedResponderLResponderLocation;
++   getUnverifiedResponderLocation()LResponderLocation;
 ```
 
 
@@ -3847,8 +3847,8 @@ android/os/Environment
 +   DIRECTORY_SCREENSHOTS
 -   getExternalStorageDirectory()LFile;
 -   getExternalStoragePublicDirectory(LString;)LFile;
-+   isExternalStorageLFile;)Z
 +   isExternalStorageLegacy()Z
++   isExternalStorageLegacy(LFile;)Z
 ```
 
 
@@ -3881,7 +3881,7 @@ android/os/Handler
 
 ```diff
 android/os/LocaleList
-+   isPseudoLULocale;)Z
++   isPseudoLocale(LULocale;)Z
 ```
 
 
@@ -3890,9 +3890,9 @@ android/os/Parcel
 +   createTypedArrayMap(LCreator;)LArrayMap;
 +   createTypedSparseArray(LCreator;)LSparseArray;
 +   readBoolean()Z
-+   readParcelableLList;LClassLoader;)LList;
++   readParcelableList(LList;LClassLoader;)LList;
 +   writeBoolean(Z)V
-+   writeParcelableLList;I)V
++   writeParcelableList(LList;I)V
 +   writeTypedArrayMap(LArrayMap;I)V
 +   writeTypedSparseArray(LSparseArray;I)V
 ```
@@ -3908,10 +3908,10 @@ android/os/PowerManager
 +   THERMAL_STATUS_NONE
 +   THERMAL_STATUS_SEVERE
 +   THERMAL_STATUS_SHUTDOWN
-+   addThermalStatusLExecutor;LOnThermalStatusChangedListener;)V
-+   addThermalStatusLOnThermalStatusChangedListener;)V
++   addThermalStatusListener(LExecutor;LOnThermalStatusChangedListener;)V
++   addThermalStatusListener(LOnThermalStatusChangedListener;)V
 +   getCurrentThermalStatus()I
-+   removeThermalStatusLOnThermalStatusChangedListener;)V
++   removeThermalStatusListener(LOnThermalStatusChangedListener;)V
 ```
 
 
@@ -3931,8 +3931,8 @@ android/os/Process
 
 ```diff
 android/os/StrictMode$VmPolicy$Builder
-+   detectCredentialProtectedWhileLBuilder;
-+   detectImplicitDirectBoot()LBuilder;
++   detectCredentialProtectedWhileLocked()Landroid/os/StrictMode$VmPolicy$Builder;
++   detectImplicitDirectBoot()Landroid/os/StrictMode$VmPolicy$Builder;
 ```
 
 
@@ -4092,7 +4092,7 @@ android/os/storage/StorageVolume
 -   <init>(LContext;LAttributeSet;)V
 -   <init>(LContext;LAttributeSet;I)V
 -   <init>(LContext;LAttributeSet;II)V
--   callChangeLObject;)Z
+-   callChangeListener(LObject;)Z
 -   compareTo(LPreference;)I
 -   findPreferenceInHierarchy(LString;)LPreference;
 -   getContext()LContext;
@@ -4104,8 +4104,8 @@ android/os/storage/StorageVolume
 -   getIntent()LIntent;
 -   getKey()LString;
 -   getLayoutResource()I
--   getOnPreferenceChangeLOnPreferenceChangeListener;
--   getOnPreferenceClickLOnPreferenceClickListener;
+-   getOnPreferenceChangeListener()LOnPreferenceChangeListener;
+-   getOnPreferenceClickListener()LOnPreferenceClickListener;
 -   getOrder()I
 -   getParent()LPreferenceGroup;
 -   getPersistedBoolean(Z)Z
@@ -4164,8 +4164,8 @@ android/os/storage/StorageVolume
 -   setIntent(LIntent;)V
 -   setKey(LString;)V
 -   setLayoutResource(I)V
--   setOnPreferenceChangeLOnPreferenceChangeListener;)V
--   setOnPreferenceClickLOnPreferenceClickListener;)V
+-   setOnPreferenceChangeListener(LOnPreferenceChangeListener;)V
+-   setOnPreferenceClickListener(LOnPreferenceClickListener;)V
 -   setOrder(I)V
 -   setPersistent(Z)V
 -   setPreferenceDataStore(LPreferenceDataStore;)V
@@ -4226,7 +4226,7 @@ android/os/storage/StorageVolume
 -   onHeaderClick(LHeader;I)V
 -   onIsHidingHeaders()Z
 -   onIsMultiPane()Z
--   setLView;)V
+-   setListFooter(LView;)V
 -   setParentTitle(LCharSequence;LCharSequence;LOnClickListener;)V
 -   showBreadCrumbs(LCharSequence;LCharSequence;)V
 -   startPreferenceFragment(LFragment;Z)V
@@ -4278,13 +4278,13 @@ android/os/storage/StorageVolume
 -   getBoolean(LString;Z)Z
 -   getFloat(LString;F)F
 -   getInt(LString;I)I
--   getLString;J)J
+-   getLong(LString;J)J
 -   getString(LString;LString;)LString;
 -   getStringSet(LString;LSet;)LSet;
 -   putBoolean(LString;Z)V
 -   putFloat(LString;F)V
 -   putInt(LString;I)V
--   putLString;J)V
+-   putLong(LString;J)V
 -   putString(LString;LString;)V
 -   putStringSet(LString;LSet;)V
 ```
@@ -5103,7 +5103,7 @@ android/telecom/CallScreeningService$CallResponse
 
 ```diff
 android/telecom/CallScreeningService$CallResponse$Builder
-+   setSilenceCall(Z)LBuilder;
++   setSilenceCall(Z)Landroid/telecom/CallScreeningService$CallResponse$Builder;
 ```
 
 
@@ -5254,7 +5254,7 @@ android/telephony/CellSignalStrengthLte
 ```diff
 android/telephony/PhoneNumberUtils
 -   isEmergencyNumber(LString;)Z
--   isLContext;LString;)Z
+-   isLocalEmergencyNumber(LContext;LString;)Z
 ```
 
 
@@ -5321,7 +5321,7 @@ android/telephony/SubscriptionManager
 +   INVALID_SIM_SLOT_INDEX
 +   SUBSCRIPTION_TYPE_LOCAL_SIM
 +   SUBSCRIPTION_TYPE_REMOTE_SIM
-+   addOnOpportunisticSubscriptionsChangedLExecutor;LOnOpportunisticSubscriptionsChangedListener;)V
++   addOnOpportunisticSubscriptionsChangedListener(LExecutor;LOnOpportunisticSubscriptionsChangedListener;)V
 +   addSubscriptionsIntoGroup(LList;LParcelUuid;)V
 +   createSubscriptionGroup(LList;)LParcelUuid;
 +   getOpportunisticSubscriptions()LList;
@@ -5331,7 +5331,7 @@ android/telephony/SubscriptionManager
 +   isActiveSubscriptionId(I)Z
 +   isUsableSubscriptionId(I)Z
 +   isValidSubscriptionId(I)Z
-+   removeOnOpportunisticSubscriptionsChangedLOnOpportunisticSubscriptionsChangedListener;)V
++   removeOnOpportunisticSubscriptionsChangedListener(LOnOpportunisticSubscriptionsChangedListener;)V
 +   removeSubscriptionsFromGroup(LList;LParcelUuid;)V
 +   setOpportunistic(ZI)Z
 +   switchToSubscription(ILPendingIntent;)V
@@ -5371,7 +5371,8 @@ android/telephony/TelephonyManager
 +   doesSwitchMultiSimConfigTriggerReboot()Z
 +   getCardIdForDefaultEuicc()I
 +   getCarrierIdFromSimMccMnc()I
-+   getEmergencyNumberLMap;
++   getEmergencyNumberList()LMap;
++   getEmergencyNumberList(I)LMap;
 +   getManufacturerCode()LString;
 +   getManufacturerCode(I)LString;
 +   getPreferredOpportunisticDataSubscription()I
@@ -5613,7 +5614,7 @@ android/text/style/TextAppearanceSpan
 +   getShadowDy()F
 +   getShadowRadius()F
 +   getTextFontWeight()I
-+   getTextLLocaleList;
++   getTextLocales()LLocaleList;
 +   getTypeface()LTypeface;
 +   isElegantTextHeight()Z
 ```
@@ -5621,8 +5622,8 @@ android/text/style/TextAppearanceSpan
 
 ```diff
 android/text/util/Linkify
-+   addLSpannable;ILFunction;)Z
-+   addLSpannable;LPattern;LString;[LString;LMatchFilter;LTransformFilter;LFunction;)Z
++   addLinks(LSpannable;ILFunction;)Z
++   addLinks(LSpannable;LPattern;LString;[LString;LMatchFilter;LTransformFilter;LFunction;)Z
 ```
 
 
@@ -5789,7 +5790,7 @@ android/view/DisplayCutout
 +   <init>(LInsets;LRect;LRect;LRect;LRect;)V
 -   <init>(LRect;LList;)V
 +   getBoundingRectBottom()LRect;
-+   getBoundingRectLRect;
++   getBoundingRectLeft()LRect;
 +   getBoundingRectRight()LRect;
 +   getBoundingRectTop()LRect;
 ```
@@ -5927,7 +5928,7 @@ android/view/View
 +   setVerticalScrollbarThumbDrawable(LDrawable;)V
 +   setVerticalScrollbarTrackDrawable(LDrawable;)V
 +   transformMatrixToGlobal(LMatrix;)V
-+   transformMatrixToLMatrix;)V
++   transformMatrixToLocal(LMatrix;)V
 ```
 
 
@@ -5972,9 +5973,9 @@ android/view/ViewGroup
 
 ```diff
 android/view/ViewTreeObserver
-+   addOnSystemGestureExclusionRectsChangedLConsumer;)V
++   addOnSystemGestureExclusionRectsChangedListener(LConsumer;)V
 +   registerFrameCommitCallback(LRunnable;)V
-+   removeOnSystemGestureExclusionRectsChangedLConsumer;)V
++   removeOnSystemGestureExclusionRectsChangedListener(LConsumer;)V
 +   unregisterFrameCommitCallback(LRunnable;)Z
 ```
 
@@ -6208,7 +6209,7 @@ android/view/textclassifier/TextClassification$Request
 
 ```diff
 android/view/textclassifier/TextClassification$Request$Builder
-+   setExtras(LBundle;)LBuilder;
++   setExtras(LBundle;)Landroid/view/textclassifier/TextClassification$Request$Builder;
 ```
 
 
@@ -6216,7 +6217,7 @@ android/view/textclassifier/TextClassification$Request$Builder
 android/view/textclassifier/TextClassifier
 +   EXTRA_FROM_TEXT_CLASSIFIER
 +   WIDGET_TYPE_NOTIFICATION
-+   detectLRequest;)LTextLanguage;
++   detectLanguage(LRequest;)LTextLanguage;
 +   onTextClassifierEvent(LTextClassifierEvent;)V
 +   suggestConversationActions(LRequest;)LConversationActions;
 ```
@@ -6225,7 +6226,7 @@ android/view/textclassifier/TextClassifier
 ```diff
 android/view/textclassifier/TextClassifier$EntityConfig
 -   create(LCollection;LCollection;LCollection;)LEntityConfig;
--   createWithExplicitEntityLCollection;)LEntityConfig;
+-   createWithExplicitEntityList(LCollection;)LEntityConfig;
 -   createWithHints(LCollection;)LEntityConfig;
 +   shouldIncludeTypesFromTextClassifier()Z
 ```
@@ -6315,7 +6316,7 @@ android/view/textclassifier/TextLinks
 
 ```diff
 android/view/textclassifier/TextLinks$Builder
-+   addLMap;LBundle;)LBuilder;
++   addLink(IILMap;LBundle;)LBuilder;
 +   setExtras(LBundle;)LBuilder;
 ```
 
@@ -6329,7 +6330,7 @@ android/view/textclassifier/TextLinks$Request
 
 ```diff
 android/view/textclassifier/TextLinks$Request$Builder
-+   setExtras(LBundle;)LBuilder;
++   setExtras(LBundle;)Landroid/view/textclassifier/TextLinks$Request$Builder;
 ```
 
 
@@ -6360,7 +6361,7 @@ android/view/textclassifier/TextSelection$Request
 
 ```diff
 android/view/textclassifier/TextSelection$Request$Builder
-+   setExtras(LBundle;)LBuilder;
++   setExtras(LBundle;)Landroid/view/textclassifier/TextSelection$Request$Builder;
 ```
 
 
@@ -6575,14 +6576,14 @@ android/widget/DialerFilter
 -   clearText()V
 -   getDigits()LCharSequence;
 -   getFilterText()LCharSequence;
--   getLCharSequence;
+-   getLetters()LCharSequence;
 -   getMode()I
 -   isQwertyKeyboard()Z
 -   onModeChange(II)V
 -   removeFilterWatcher(LTextWatcher;)V
 -   setDigitsWatcher(LTextWatcher;)V
 -   setFilterWatcher(LTextWatcher;)V
--   setLTextWatcher;)V
+-   setLettersWatcher(LTextWatcher;)V
 -   setMode(I)V
 ```
 
@@ -6780,9 +6781,9 @@ android/widget/SlidingDrawer
 -   isOpened()Z
 -   lock()V
 -   open()V
--   setOnDrawerCloseLOnDrawerCloseListener;)V
--   setOnDrawerOpenLOnDrawerOpenListener;)V
--   setOnDrawerScrollLOnDrawerScrollListener;)V
+-   setOnDrawerCloseListener(LOnDrawerCloseListener;)V
+-   setOnDrawerOpenListener(LOnDrawerOpenListener;)V
+-   setOnDrawerScrollListener(LOnDrawerScrollListener;)V
 -   toggle()V
 -   unlock()V
 ```
@@ -6822,7 +6823,7 @@ android/widget/TextView
 +   getTextCursorDrawable()LDrawable;
 +   getTextDirectionHeuristic()LTextDirectionHeuristic;
 +   getTextSelectHandle()LDrawable;
-+   getTextSelectHandleLDrawable;
++   getTextSelectHandleLeft()LDrawable;
 +   getTextSelectHandleRight()LDrawable;
 +   isHorizontallyScrollable()Z
 +   isSingleLine()Z
@@ -6831,8 +6832,8 @@ android/widget/TextView
 +   setTextCursorDrawable(LDrawable;)V
 +   setTextSelectHandle(I)V
 +   setTextSelectHandle(LDrawable;)V
-+   setTextSelectHandleLDrawable;)V
 +   setTextSelectHandleLeft(I)V
++   setTextSelectHandleLeft(LDrawable;)V
 +   setTextSelectHandleRight(I)V
 +   setTextSelectHandleRight(LDrawable;)V
 ```
@@ -6891,7 +6892,7 @@ android/widget/ZoomButtonsController
 -   isVisible()Z
 -   setAutoDismissed(Z)V
 -   setFocusable(Z)V
--   setOnZoomLOnZoomListener;)V
+-   setOnZoomListener(LOnZoomListener;)V
 -   setVisible(Z)V
 -   setZoomInEnabled(Z)V
 -   setZoomOutEnabled(Z)V
@@ -6913,8 +6914,8 @@ android/widget/ZoomButtonsController
 -   hide()V
 -   setIsZoomInEnabled(Z)V
 -   setIsZoomOutEnabled(Z)V
--   setOnZoomInClickLOnClickListener;)V
--   setOnZoomOutClickLOnClickListener;)V
+-   setOnZoomInClickListener(LOnClickListener;)V
+-   setOnZoomOutClickListener(LOnClickListener;)V
 -   setZoomSpeed(J)V
 -   show()V
 ```
@@ -7167,13 +7168,13 @@ org/apache/http/params/CoreConnectionPNames
 ```diff
 org/apache/http/params/HttpConnectionParams
 -   getConnectionTimeout(LHttpParams;)I
--   getLHttpParams;)I
+-   getLinger(LHttpParams;)I
 -   getSoTimeout(LHttpParams;)I
 -   getSocketBufferSize(LHttpParams;)I
 -   getTcpNoDelay(LHttpParams;)Z
 -   isStaleCheckingEnabled(LHttpParams;)Z
 -   setConnectionTimeout(LHttpParams;I)V
--   setLHttpParams;I)V
+-   setLinger(LHttpParams;I)V
 -   setSoTimeout(LHttpParams;I)V
 -   setSocketBufferSize(LHttpParams;I)V
 -   setStaleCheckingEnabled(LHttpParams;Z)V
@@ -7187,7 +7188,7 @@ org/apache/http/params/HttpParams
 -   getBooleanParameter(LString;Z)Z
 -   getDoubleParameter(LString;D)D
 -   getIntParameter(LString;I)I
--   getLString;J)J
+-   getLongParameter(LString;J)J
 -   getParameter(LString;)LObject;
 -   isParameterFalse(LString;)Z
 -   isParameterTrue(LString;)Z
@@ -7195,7 +7196,7 @@ org/apache/http/params/HttpParams
 -   setBooleanParameter(LString;Z)LHttpParams;
 -   setDoubleParameter(LString;D)LHttpParams;
 -   setIntParameter(LString;I)LHttpParams;
--   setLString;J)LHttpParams;
+-   setLongParameter(LString;J)LHttpParams;
 -   setParameter(LString;LObject;)LHttpParams;
 ```
 
@@ -7218,7 +7219,7 @@ org/xml/sax/DocumentHandler
 -   endElement(LString;)V
 -   ignorableWhitespace([CII)V
 -   processingInstruction(LString;LString;)V
--   setDocumentLLocator;)V
+-   setDocumentLocator(LLocator;)V
 -   startDocument()V
 -   startElement(LString;LAttributeList;)V
 ```
@@ -7238,7 +7239,7 @@ org/xml/sax/Parser
 -   setDocumentHandler(LDocumentHandler;)V
 -   setEntityResolver(LEntityResolver;)V
 -   setErrorHandler(LErrorHandler;)V
--   setLLocale;)V
+-   setLocale(LLocale;)V
 ```
 
 
@@ -7249,7 +7250,7 @@ org/xml/sax/helpers/AttributeListImpl
 -   addAttribute(LString;LString;LString;)V
 -   clear()V
 -   removeAttribute(LString;)V
--   setAttributeLAttributeList;)V
+-   setAttributeList(LAttributeList;)V
 ```
 
 
