@@ -636,6 +636,15 @@ const createPages = (distFolder, pages) => {
     pages.forEach(createPage);
 }
 
+const escapeHtml = (html) => {
+    return html
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
 const createRSS = (distFolder, pages) => {
     const builder = require('xmlbuilder');
     const rfc822 = (date) => {
@@ -653,7 +662,7 @@ const createRSS = (distFolder, pages) => {
                 'item': pages.slice().reverse().map(p => {
                     return {
                         'title': p.title,
-                        'description': '',
+                        'description': p.content,
                         'link': $site.url + p.url,
                         'pubDate': rfc822(p.date)
                     }
