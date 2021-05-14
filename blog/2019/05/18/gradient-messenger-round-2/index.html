@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Gradient Messenger Round 2 | Di's blog</title>
+  <link rel="icon" sizes="32x32" type="images/png" href="/favicon-32x32.png">
+  <link rel="icon" sizes="32x32" type="images/png" href="/favicon-16x16.png">
+  <link rel="icon" href="/favicon.ico">
+  <link rel="stylesheet" type="text/css" href="/main.css">
+  <link rel="alternate" type="application/rss+xml" title="RSS" href="/rss.xml">
+  <meta name="author" content="Dimitry Ivanov">
+  <meta property="og:title" content="Gradient Messenger Round 2">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://noties.io/blog/2019/05/18/gradient-messenger-round-2/index.html">
+</head>
+
+<body>
+  <header>
+    <img class="avatar" src="/av.jpg" alt="Dimitry Ivanov">
+    <h1 style="font-family: monospace">Gradient Messenger Round 2</h1>
+    <a class="about" href="/">by DIMITRY IVANOV</a>
+  </header>
+  <main>
+    <div class="container">
+      <div class="content">
+        <p>In the <a href="/blog/2019/04/23/gradient-messenger/index.html">previous</a> article we've implemented gradient background with fixed scrolling behavior. Similar effect can be seen in the Fa¢ebook Messenger app. Now it's the time to give our app some UI polish - we will add rounded corners to chat messages and introduce messages <em>grouping</em>. Most of the changes will happen in our custom <code>RecyclerView.ItemDecoration</code> which source can be found <a href="https://github.com/noties/BlogProjects/blob/master/02-GradientMessengerRound/app/src/main/java/io/noties/blog/gradientmessenger/MessageDecoration.kt">here</a>. As a bonus point we will make our <code>RecyclerView.ItemDecoration</code> ready for <code>RecyclerView.ItemAnimator</code> animations.</p>
+        <video controls="true" loop poster="/assets/video/gradient-messenger-round-2-preview.jpg">
+          <source src="/assets/video/gradient-messenger-round-2.mp4" type="video/mp4"> You browser does not support mp4 playback, try downloading video file <a href="/assets/video/gradient-messenger-round-2.mp4">directly</a>
+        </video>
+        <p id="excerpt-continue"></p>
+        <p>Let's start with the <em>grouping</em> of messages. Messages from the same sender (be it <code>me</code> or <code>you</code>) will have smaller vertical margins between them. And messages from different senders will have bigger vertical margins. We are going to use the <code>getItemOffsets</code> method of our <code>RecyclerView.ItemDecoration</code> to do so. Also we need to make sure to remove all possible vertical margins specified in layout XML for chat messages (as we are going to process them dynamically):</p>
+        <pre><code class="language-kotlin"><span class="token comment">// let's create a Config structure to hold required configuration properties</span>
+<span class="token keyword">class</span> <span class="token function">Config</span><span class="token punctuation">(</span>
+        <span class="token annotation builtin">@Px</span> <span class="token keyword">val</span> groupedMargin<span class="token operator">:</span> Int<span class="token punctuation">,</span>
+        <span class="token annotation builtin">@Px</span> <span class="token keyword">val</span> regularMargin<span class="token operator">:</span> Int
+<span class="token punctuation">)</span>
+
+<span class="token keyword">class</span> <span class="token function">MessageDecoration</span><span class="token punctuation">(</span>
+        <span class="token keyword">private</span> <span class="token keyword">val</span> config<span class="token operator">:</span> Config<span class="token punctuation">,</span>
+        <span class="token keyword">private</span> <span class="token keyword">val</span> meItemViewType<span class="token operator">:</span> Int<span class="token punctuation">,</span>
+        <span class="token keyword">private</span> <span class="token keyword">val</span> youItemViewType<span class="token operator">:</span> Int
+<span class="token punctuation">)</span> <span class="token operator">:</span> RecyclerView<span class="token punctuation">.</span><span class="token function">ItemDecoration</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+
+    <span class="token keyword">override</span> <span class="token keyword">fun</span> <span class="token function">getItemOffsets</span><span class="token punctuation">(</span>
+            outRect<span class="token operator">:</span> Rect<span class="token punctuation">,</span>
+            view<span class="token operator">:</span> View<span class="token punctuation">,</span>
+            parent<span class="token operator">:</span> RecyclerView<span class="token punctuation">,</span>
+            state<span class="token operator">:</span> RecyclerView<span class="token punctuation">.</span>State<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+
+        <span class="token comment">// clear offsets first</span>
+        outRect<span class="token punctuation">.</span><span class="token function">set</span><span class="token punctuation">(</span><span class="token number">0</span><span class="token punctuation">,</span> <span class="token number">0</span><span class="token punctuation">,</span> <span class="token number">0</span><span class="token punctuation">,</span> <span class="token number">0</span><span class="token punctuation">)</span>
+
+        <span class="token comment">// we must have adapter in order to detect neighbors</span>
+        <span class="token keyword">val</span> adapter <span class="token operator">=</span> parent<span class="token punctuation">.</span>adapter <span class="token operator">?:</span> <span class="token keyword">return</span>
+
+	    <span class="token comment">// we must also have `ViewHolder` to detect `itemViewType`</span>
+        <span class="token keyword">val</span> holder <span class="token operator">=</span> parent<span class="token punctuation">.</span><span class="token function">findContainingViewHolder</span><span class="token punctuation">(</span>view<span class="token punctuation">)</span> <span class="token operator">?:</span> <span class="token keyword">return</span>
+
+        <span class="token keyword">val</span> itemViewType <span class="token operator">=</span> holder<span class="token punctuation">.</span>itemViewType
+        
+        <span class="token comment">// we will process only items that we are interested in</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span>itemViewType <span class="token operator">!=</span> meItemViewType <span class="token operator">&amp;&amp;</span> itemViewType <span class="token operator">!=</span> youItemViewType<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+            <span class="token keyword">return</span>
+        <span class="token punctuation">}</span>
+
+        <span class="token comment">// if previous the same -> grouped margin-top else regular</span>
+        <span class="token comment">// if next the same -> grouped margin-bottom else regular</span>
+
+        <span class="token comment">// we will use adapter position to detect next &amp; previous items</span>
+        <span class="token comment">// (they can be absent from layout at this point)</span>
+        <span class="token keyword">val</span> position <span class="token operator">=</span> holder<span class="token punctuation">.</span>adapterPosition
+
+	    <span class="token comment">// if there is an item _before_ and it's from the same sender -> small margin</span>
+        outRect<span class="token punctuation">.</span>top <span class="token operator">=</span> <span class="token keyword">if</span> <span class="token punctuation">(</span>position <span class="token operator">></span> <span class="token number">0</span>
+                <span class="token operator">&amp;&amp;</span> itemViewType <span class="token operator">==</span> adapter<span class="token punctuation">.</span><span class="token function">getItemViewType</span><span class="token punctuation">(</span>position <span class="token operator">-</span> <span class="token number">1</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+            config<span class="token punctuation">.</span>groupedMargin
+        <span class="token punctuation">}</span> <span class="token keyword">else</span> <span class="token punctuation">{</span>
+            config<span class="token punctuation">.</span>regularMargin
+        <span class="token punctuation">}</span>
+
+	    <span class="token comment">// if there is item _after_ and it's from the same sender -> small margin</span>
+        outRect<span class="token punctuation">.</span>bottom <span class="token operator">=</span> <span class="token keyword">if</span> <span class="token punctuation">(</span>position <span class="token operator">&lt;</span> <span class="token punctuation">(</span>adapter<span class="token punctuation">.</span>itemCount<span class="token punctuation">)</span> <span class="token operator">-</span> <span class="token number">1</span>
+                <span class="token operator">&amp;&amp;</span> itemViewType <span class="token operator">==</span> adapter<span class="token punctuation">.</span><span class="token function">getItemViewType</span><span class="token punctuation">(</span>position <span class="token operator">+</span> <span class="token number">1</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+            config<span class="token punctuation">.</span>groupedMargin
+        <span class="token punctuation">}</span> <span class="token keyword">else</span> <span class="token punctuation">{</span>
+            config<span class="token punctuation">.</span>regularMargin
+        <span class="token punctuation">}</span>
+    <span class="token punctuation">}</span>
+<span class="token punctuation">}</span>
+</code></pre>
+        <p><img src="/assets/images/gradient-messenger-round-2.png" alt="result" /></p>
+        <p>Now we are going to add rounded corners for chat messages. In order to enhance the <em>grouping</em> we will apply the following corner radius logic:</p>
+        <ul>
+          <li>if a message has a message from the same sender above (before):</li>
+          <li>
+            <ul>
+              <li><code>me</code> TL (top-left) <em>grouped</em> corner radius</li>
+            </ul>
+          </li>
+          <li>
+            <ul>
+              <li><code>you</code> TR (top-right) <em>grouped</em> corner radius</li>
+            </ul>
+          </li>
+          <li>if a message has a message from the same sender below (after):</li>
+          <li>
+            <ul>
+              <li><code>me</code> BL (bottom-left) <em>grouped</em> corner radius</li>
+            </ul>
+          </li>
+          <li>
+            <ul>
+              <li><code>you</code> BR (bottom-right) <em>grouped</em> corner radius</li>
+            </ul>
+          </li>
+          <li>in all other cases corner radius is <em>regular</em></li>
+        </ul>
+        <p>So, if there is only one message in a group — it will have <em>regular</em> radius for all corners.</p>
+        <p>Also, unlike in the <a href="/blog/2019/04/23/gradient-messenger/index.html">previous</a> article, we are going to draw <code>me</code> chat message background in the <code>ItemDecoration</code> itself. This will help us isolate drawing logic in one place. So we won't have to jump through multiple project files to apply a small tweak. And we are actually going to apply the same <em>clipping</em> logic for <em>both</em> <code>me</code> and <code>you</code> chat messages. So theoretically we can use another gradient for <code>me</code> chat messages also (or any other <code>Drawable</code> actually). But let's focus for a moment on the corners and update our configuration structure:</p>
+        <pre><code class="language-kotlin"><span class="code-fade"><span class="token keyword">class</span> <span class="token function">Config</span><span class="token punctuation">(</span></span>
+<span class="code-fade">        <span class="token annotation builtin">@Px</span> <span class="token keyword">val</span> groupedMargin<span class="token operator">:</span> Int<span class="token punctuation">,</span></span>
+<span class="code-fade">        <span class="token annotation builtin">@Px</span> <span class="token keyword">val</span> regularMargin<span class="token operator">:</span> Int<span class="token punctuation">,</span></span>
+        <span class="token annotation builtin">@Px</span> <span class="token keyword">val</span> groupedCornerRadius<span class="token operator">:</span> Int<span class="token punctuation">,</span>
+        <span class="token annotation builtin">@Px</span> <span class="token keyword">val</span> regularCornerRadius<span class="token operator">:</span> Int<span class="token punctuation">,</span>
+        <span class="token keyword">val</span> meBackgroundDrawable<span class="token operator">:</span> Drawable<span class="token punctuation">,</span>
+        <span class="token keyword">val</span> youBackgroundDrawable<span class="token operator">:</span> Drawable
+<span class="code-fade"><span class="token punctuation">)</span></span>
+<span class="code-fade"></span></code></pre>
+        <p>Okay, draw!</p>
+        <pre><code class="language-kotlin"><span class="token keyword">class</span> <span class="token function">MessageDecoration</span><span class="token punctuation">(</span>
+        <span class="token keyword">private</span> <span class="token keyword">val</span> config<span class="token operator">:</span> Config<span class="token punctuation">,</span>
+        <span class="token keyword">private</span> <span class="token keyword">val</span> meItemViewType<span class="token operator">:</span> Int<span class="token punctuation">,</span>
+        <span class="token keyword">private</span> <span class="token keyword">val</span> youItemViewType<span class="token operator">:</span> Int
+<span class="token punctuation">)</span> <span class="token operator">:</span> RecyclerView<span class="token punctuation">.</span><span class="token function">ItemDecoration</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+
+    <span class="token comment">// path for items area (that will be clipped)</span>
+    <span class="token keyword">private</span> <span class="token keyword">val</span> path <span class="token operator">=</span> <span class="token function">Path</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+
+    <span class="token comment">// rect to hold view dimensions</span>
+    <span class="token keyword">private</span> <span class="token keyword">val</span> rectF <span class="token operator">=</span> <span class="token function">RectF</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+
+    <span class="token comment">// we cannot use @Px annotation with Floats, so make an explicit conversion</span>
+    <span class="token keyword">private</span> <span class="token keyword">val</span> groupedCornerRadiusF <span class="token operator">=</span> config<span class="token punctuation">.</span>groupedCornerRadius<span class="token punctuation">.</span><span class="token function">toFloat</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+    <span class="token keyword">private</span> <span class="token keyword">val</span> regularCornerRadiusF <span class="token operator">=</span> config<span class="token punctuation">.</span>regularCornerRadius<span class="token punctuation">.</span><span class="token function">toFloat</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+
+    <span class="token keyword">override</span> <span class="token keyword">fun</span> <span class="token function">onDraw</span><span class="token punctuation">(</span>c<span class="token operator">:</span> Canvas<span class="token punctuation">,</span> parent<span class="token operator">:</span> RecyclerView<span class="token punctuation">,</span> state<span class="token operator">:</span> RecyclerView<span class="token punctuation">.</span>State<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+        <span class="token comment">// todo</span>
+    <span class="token punctuation">}</span>
+<span class="token punctuation">}</span>
+</code></pre>
+        <blockquote class="custom warning">
+          <h3>Note</h3>
+          <p>Unlike previous article we are using <code>Path</code> for clipping as we want to have rounded corners for our chat messages. This cannot be achieved with a regular <code>canvas.clipRoundRect</code> method because:</p>
+          <ul>
+            <li>it does not exist in Android API
+            <li>(but even if it did) we want to have different corners to have different radius
+          </ul>
+        </blockquote>
+        <p>We will re-use most of the view-finding logic from the <a href="/blog/2019/04/23/gradient-messenger/index.html">previous</a> article:</p>
+        <pre><code class="language-kotlin"><span class="token keyword">override</span> <span class="token keyword">fun</span> <span class="token function">onDraw</span><span class="token punctuation">(</span>c<span class="token operator">:</span> Canvas<span class="token punctuation">,</span> parent<span class="token operator">:</span> RecyclerView<span class="token punctuation">,</span> state<span class="token operator">:</span> RecyclerView<span class="token punctuation">.</span>State<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+
+    <span class="token comment">// we need adapter to check for neighbor items</span>
+    <span class="token keyword">val</span> adapter <span class="token operator">=</span> parent<span class="token punctuation">.</span>adapter <span class="token operator">?:</span> <span class="token keyword">return</span>
+
+    <span class="token keyword">var</span> view<span class="token operator">:</span> View
+    <span class="token keyword">var</span> holder<span class="token operator">:</span> RecyclerView<span class="token punctuation">.</span>ViewHolder
+    <span class="token keyword">var</span> itemViewType<span class="token operator">:</span> Int
+    <span class="token keyword">var</span> position<span class="token operator">:</span> Int
+
+    <span class="token keyword">var</span> previousItemTheSameType<span class="token operator">:</span> Boolean
+    <span class="token keyword">var</span> nextItemTheSameType<span class="token operator">:</span> Boolean
+
+    <span class="token keyword">for</span> <span class="token punctuation">(</span>i <span class="token keyword">in</span> <span class="token number">0</span> until parent<span class="token punctuation">.</span>childCount<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+
+        view <span class="token operator">=</span> parent<span class="token punctuation">.</span><span class="token function">getChildAt</span><span class="token punctuation">(</span>i<span class="token punctuation">)</span>
+        holder <span class="token operator">=</span> parent<span class="token punctuation">.</span><span class="token function">findContainingViewHolder</span><span class="token punctuation">(</span>view<span class="token punctuation">)</span> <span class="token operator">?:</span> <span class="token keyword">continue</span>
+        itemViewType <span class="token operator">=</span> holder<span class="token punctuation">.</span>itemViewType
+
+        <span class="token comment">// process only message items</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span>itemViewType <span class="token operator">!=</span> meItemViewType <span class="token operator">&amp;&amp;</span> itemViewType <span class="token operator">!=</span> youItemViewType<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+            <span class="token keyword">continue</span>
+        <span class="token punctuation">}</span>
+
+        <span class="token keyword">val</span> textView <span class="token operator">=</span> <span class="token punctuation">(</span>holder <span class="token keyword">as</span> TextViewHolder<span class="token punctuation">)</span><span class="token punctuation">.</span>textView
+
+        <span class="token comment">// it's required for us to have x,y coordinates _relative_ to RecyclerView</span>
+        <span class="token comment">// also, convert to floats</span>
+        <span class="token keyword">val</span> <span class="token punctuation">(</span>x<span class="token punctuation">,</span> y<span class="token punctuation">)</span> <span class="token operator">=</span> textView<span class="token punctuation">.</span><span class="token function">relativeTo</span><span class="token punctuation">(</span>parent<span class="token punctuation">)</span>
+                <span class="token punctuation">.</span><span class="token function">let</span> <span class="token punctuation">{</span> <span class="token function">Pair</span><span class="token punctuation">(</span>it<span class="token punctuation">.</span>x<span class="token punctuation">.</span><span class="token function">toFloat</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span> it<span class="token punctuation">.</span>y<span class="token punctuation">.</span><span class="token function">toFloat</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">}</span>
+
+        <span class="token comment">// the actual _fun_ begins here</span>
+    <span class="token punctuation">}</span>
+<span class="token punctuation">}</span>
+</code></pre>
+        <p>Next we will check for neighbors of a chat message to detect if we need to apply different radius for corners.</p>
+        <pre><code class="language-kotlin"><span class="code-fade"><span class="token keyword">override</span> <span class="token keyword">fun</span> <span class="token function">onDraw</span><span class="token punctuation">(</span>c<span class="token operator">:</span> Canvas<span class="token punctuation">,</span> parent<span class="token operator">:</span> RecyclerView<span class="token punctuation">,</span> state<span class="token operator">:</span> RecyclerView<span class="token punctuation">.</span>State<span class="token punctuation">)</span> <span class="token punctuation">{</span></span>
+<span class="code-fade"></span>
+<span class="code-fade">    <span class="token comment">/*...*/</span></span>
+<span class="code-fade"></span>
+<span class="code-fade">        <span class="token keyword">val</span> <span class="token punctuation">(</span>x<span class="token punctuation">,</span> y<span class="token punctuation">)</span> <span class="token operator">=</span> textView<span class="token punctuation">.</span><span class="token function">relativeTo</span><span class="token punctuation">(</span>parent<span class="token punctuation">)</span></span>
+<span class="code-fade">                <span class="token punctuation">.</span><span class="token function">let</span> <span class="token punctuation">{</span> <span class="token function">Pair</span><span class="token punctuation">(</span>it<span class="token punctuation">.</span>x<span class="token punctuation">.</span><span class="token function">toFloat</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span> it<span class="token punctuation">.</span>y<span class="token punctuation">.</span><span class="token function">toFloat</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">}</span></span>
+<span class="code-fade"></span>
+        <span class="token comment">// position to obtain neighbors</span>
+        position <span class="token operator">=</span> holder<span class="token punctuation">.</span>adapterPosition
+
+        <span class="token comment">// now, check if we have previous item of our type</span>
+        <span class="token comment">// then check if next one is of our type</span>
+
+        <span class="token comment">// should apply rounding to top</span>
+        previousItemTheSameType <span class="token operator">=</span> position <span class="token operator">></span> <span class="token number">0</span>
+                <span class="token operator">&amp;&amp;</span> adapter<span class="token punctuation">.</span><span class="token function">getItemViewType</span><span class="token punctuation">(</span>position <span class="token operator">-</span> <span class="token number">1</span><span class="token punctuation">)</span> <span class="token operator">==</span> itemViewType
+
+        <span class="token comment">// should apply rounding to bottom</span>
+        nextItemTheSameType <span class="token operator">=</span> position <span class="token operator">&lt;</span> <span class="token punctuation">(</span>adapter<span class="token punctuation">.</span>itemCount <span class="token operator">-</span> <span class="token number">1</span><span class="token punctuation">)</span>
+                <span class="token operator">&amp;&amp;</span> adapter<span class="token punctuation">.</span><span class="token function">getItemViewType</span><span class="token punctuation">(</span>position <span class="token operator">+</span> <span class="token number">1</span><span class="token punctuation">)</span> <span class="token operator">==</span> itemViewType
+
+        <span class="token comment">// reset path</span>
+        path<span class="token punctuation">.</span><span class="token function">rewind</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+
+        <span class="token comment">// apply view bounds</span>
+        rectF<span class="token punctuation">.</span><span class="token function">set</span><span class="token punctuation">(</span>x<span class="token punctuation">,</span> y<span class="token punctuation">,</span> x <span class="token operator">+</span> textView<span class="token punctuation">.</span>width<span class="token punctuation">,</span> y <span class="token operator">+</span> textView<span class="token punctuation">.</span>height<span class="token punctuation">)</span>
+
+        <span class="token comment">// a single message in a group</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token operator">!</span>previousItemTheSameType <span class="token operator">&amp;&amp;</span> <span class="token operator">!</span>nextItemTheSameType<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+
+            <span class="token comment">// just a regular rounded rect for all corners</span>
+            path<span class="token punctuation">.</span><span class="token function">addRoundRect</span><span class="token punctuation">(</span>rectF<span class="token punctuation">,</span> regularCornerRadiusF<span class="token punctuation">,</span> regularCornerRadiusF<span class="token punctuation">,</span> Path<span class="token punctuation">.</span>Direction<span class="token punctuation">.</span>CCW<span class="token punctuation">)</span>
+
+        <span class="token punctuation">}</span> <span class="token keyword">else</span> <span class="token punctuation">{</span>
+            <span class="token comment">// to be continued here...</span>
+        <span class="token punctuation">}</span>
+        
+    <span class="token comment">/*...*/</span>
+<span class="token punctuation">}</span>
+</code></pre>
+        <p>Okay, having a rounded-rectangle with all corners sharing the same corner radius was relatively easy. Unfortunately we will have to draw the whole figure if we want to apply different radius to corners. Let's create an extension method for <code>Path</code> object to accept corner radius values and apply them. This extension method should also accept <code>RectF</code> as chat message view bounds:</p>
+        <pre><code class="language-kotlin"><span class="token keyword">private</span> <span class="token keyword">fun</span> Path<span class="token punctuation">.</span><span class="token function">addRoundRect</span><span class="token punctuation">(</span>
+        bounds<span class="token operator">:</span> RectF<span class="token punctuation">,</span>
+        leftTopRadius<span class="token operator">:</span> Float<span class="token punctuation">,</span>
+        topRightRadius<span class="token operator">:</span> Float<span class="token punctuation">,</span>
+        bottomRightRadius<span class="token operator">:</span> Float<span class="token punctuation">,</span>
+        bottomLeftRadius<span class="token operator">:</span> Float<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+
+    <span class="token comment">// we will be drawing from left-top</span>
+    <span class="token comment">// we must init position to be between left-top &amp; bottom-left (x=0,y=height/2)</span>
+
+    <span class="token function">moveTo</span><span class="token punctuation">(</span>bounds<span class="token punctuation">.</span>left<span class="token punctuation">,</span> bounds<span class="token punctuation">.</span>top <span class="token operator">+</span> <span class="token punctuation">(</span>bounds<span class="token punctuation">.</span><span class="token function">height</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">/</span> <span class="token number">2.0F</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+
+    <span class="token comment">// the same for all corners</span>
+    <span class="token keyword">val</span> sweepAngle <span class="token operator">=</span> <span class="token number">90.0F</span>
+
+    <span class="token comment">// inner helper function to add an arc starting at [x,y]</span>
+    <span class="token keyword">fun</span> <span class="token function">arc</span><span class="token punctuation">(</span>
+            rectF<span class="token operator">:</span> RectF<span class="token punctuation">,</span>
+            startAngle<span class="token operator">:</span> Float<span class="token punctuation">,</span>
+            x<span class="token operator">:</span> Float<span class="token punctuation">,</span>
+            y<span class="token operator">:</span> Float<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+        <span class="token keyword">this</span><span class="token punctuation">.</span><span class="token function">lineTo</span><span class="token punctuation">(</span>x<span class="token punctuation">,</span> y<span class="token punctuation">)</span>
+        <span class="token keyword">this</span><span class="token punctuation">.</span><span class="token function">arcTo</span><span class="token punctuation">(</span>rectF<span class="token punctuation">,</span> startAngle<span class="token punctuation">,</span> sweepAngle<span class="token punctuation">)</span>
+    <span class="token punctuation">}</span>
+
+    <span class="token comment">// anonymous lambda w/ immediate execution, please note that semicolon is required</span>
+    <span class="token comment">// after the execution call</span>
+    <span class="token comment">//</span>
+    <span class="token comment">// left-top</span>
+    <span class="token punctuation">{</span>
+        <span class="token comment">// |x| | |</span>
+        <span class="token comment">// | | | |</span>
+        <span class="token keyword">val</span> rectF <span class="token operator">=</span> RECT_F<span class="token punctuation">.</span><span class="token function">apply</span> <span class="token punctuation">{</span>
+            <span class="token keyword">val</span> diameter <span class="token operator">=</span> leftTopRadius <span class="token operator">*</span> <span class="token number">2.0F</span>
+            <span class="token keyword">set</span><span class="token punctuation">(</span>
+                    bounds<span class="token punctuation">.</span>left<span class="token punctuation">,</span>
+                    bounds<span class="token punctuation">.</span>top<span class="token punctuation">,</span>
+                    bounds<span class="token punctuation">.</span>left <span class="token operator">+</span> diameter<span class="token punctuation">,</span>
+                    bounds<span class="token punctuation">.</span>top <span class="token operator">+</span> diameter<span class="token punctuation">)</span>
+        <span class="token punctuation">}</span>
+        <span class="token function">arc</span><span class="token punctuation">(</span>rectF<span class="token punctuation">,</span> <span class="token number">180.0F</span><span class="token punctuation">,</span> rectF<span class="token punctuation">.</span>left<span class="token punctuation">,</span> rectF<span class="token punctuation">.</span>top <span class="token operator">+</span> leftTopRadius<span class="token punctuation">)</span>
+    <span class="token punctuation">}</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+    <span class="token comment">// top-right, bottom-right and bottom-left corners handling is omitted for brevity</span>
+    <span class="token comment">/*...*/</span>
+<span class="token punctuation">}</span>
+</code></pre>
+        <p>With that in place let's detect corner radius values for a chat message and add a rounded rectangle to the <code>path</code>:</p>
+        <pre><code class="language-kotlin"><span class="code-fade"><span class="token keyword">override</span> <span class="token keyword">fun</span> <span class="token function">onDraw</span><span class="token punctuation">(</span>c<span class="token operator">:</span> Canvas<span class="token punctuation">,</span> parent<span class="token operator">:</span> RecyclerView<span class="token punctuation">,</span> state<span class="token operator">:</span> RecyclerView<span class="token punctuation">.</span>State<span class="token punctuation">)</span> <span class="token punctuation">{</span></span>
+<span class="code-fade"></span>
+<span class="code-fade">    <span class="token comment">/*...*/</span></span>
+<span class="code-fade"></span>
+<span class="code-fade">    <span class="token keyword">for</span> <span class="token punctuation">(</span>i <span class="token keyword">in</span> <span class="token number">0</span> until parent<span class="token punctuation">.</span>childCount<span class="token punctuation">)</span> <span class="token punctuation">{</span></span>
+<span class="code-fade"></span>
+<span class="code-fade">        <span class="token comment">/*...*/</span></span>
+<span class="code-fade"></span>
+<span class="code-fade">        <span class="token comment">// a single message in a group</span></span>
+<span class="code-fade">        <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token operator">!</span>previousItemTheSameType <span class="token operator">&amp;&amp;</span> <span class="token operator">!</span>nextItemTheSameType<span class="token punctuation">)</span> <span class="token punctuation">{</span></span>
+<span class="code-fade"></span>
+<span class="code-fade">            <span class="token comment">// just a regular rounded rect for all corners</span></span>
+<span class="code-fade">            path<span class="token punctuation">.</span><span class="token function">addRoundRect</span><span class="token punctuation">(</span>rectF<span class="token punctuation">,</span> regularCornerRadiusF<span class="token punctuation">,</span> regularCornerRadiusF<span class="token punctuation">,</span> Path<span class="token punctuation">.</span>Direction<span class="token punctuation">.</span>CCW<span class="token punctuation">)</span></span>
+<span class="code-fade"></span>
+        <span class="token punctuation">}</span> <span class="token keyword">else</span> <span class="token punctuation">{</span>
+
+            <span class="token keyword">if</span> <span class="token punctuation">(</span>itemViewType <span class="token operator">==</span> meItemViewType<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+                <span class="token comment">// our extension method</span>
+                path<span class="token punctuation">.</span><span class="token function">addRoundRect</span><span class="token punctuation">(</span>
+                        rectF<span class="token punctuation">,</span>
+                        <span class="token comment">// `ternary` is a simple extension function on Boolean</span>
+                        previousItemTheSameType<span class="token punctuation">.</span><span class="token function">ternary</span><span class="token punctuation">(</span>groupedCornerRadiusF<span class="token punctuation">,</span> regularCornerRadiusF<span class="token punctuation">)</span><span class="token punctuation">,</span>
+                        regularCornerRadiusF<span class="token punctuation">,</span>
+                        regularCornerRadiusF<span class="token punctuation">,</span>
+                        nextItemTheSameType<span class="token punctuation">.</span><span class="token function">ternary</span><span class="token punctuation">(</span>groupedCornerRadiusF<span class="token punctuation">,</span> regularCornerRadiusF<span class="token punctuation">)</span><span class="token punctuation">)</span>
+            <span class="token punctuation">}</span> <span class="token keyword">else</span> <span class="token punctuation">{</span>
+                <span class="token comment">// our extension method</span>
+                path<span class="token punctuation">.</span><span class="token function">addRoundRect</span><span class="token punctuation">(</span>
+                        rectF<span class="token punctuation">,</span>
+                        regularCornerRadiusF<span class="token punctuation">,</span>
+                        previousItemTheSameType<span class="token punctuation">.</span><span class="token function">ternary</span><span class="token punctuation">(</span>groupedCornerRadiusF<span class="token punctuation">,</span> regularCornerRadiusF<span class="token punctuation">)</span><span class="token punctuation">,</span>
+                        nextItemTheSameType<span class="token punctuation">.</span><span class="token function">ternary</span><span class="token punctuation">(</span>groupedCornerRadiusF<span class="token punctuation">,</span> regularCornerRadiusF<span class="token punctuation">)</span><span class="token punctuation">,</span>
+                        regularCornerRadiusF<span class="token punctuation">)</span>
+            <span class="token punctuation">}</span>
+
+            <span class="token comment">// although it's not required, let's still close the path</span>
+            path<span class="token punctuation">.</span><span class="token function">close</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+        <span class="token punctuation">}</span>
+<span class="code-fade"></span>
+<span class="code-fade">        <span class="token comment">/*...*/</span></span>
+<span class="code-fade">    <span class="token punctuation">}</span></span>
+<span class="code-fade"><span class="token punctuation">}</span></span>
+<span class="code-fade"></span></code></pre>
+        <p>For those who are interested <code>ternary</code> extension method is implemented like this:</p>
+        <pre><code class="language-kotlin"><span class="token keyword">private</span> <span class="token keyword">fun</span> <span class="token operator">&lt;</span>T<span class="token operator">></span> Boolean<span class="token punctuation">.</span><span class="token function">ternary</span><span class="token punctuation">(</span>left<span class="token operator">:</span> T<span class="token punctuation">,</span> right<span class="token operator">:</span> T<span class="token punctuation">)</span> <span class="token operator">=</span> <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token keyword">this</span><span class="token punctuation">)</span> left <span class="token keyword">else</span> right
+</code></pre>
+        <p>Although we are deep down in to the <code>onDraw</code> method we still haven't <em>drawn</em> anything yet. Let's fix that. As we've already done most of the heavy lifting drawing is actually going to be easy:</p>
+        <pre><code class="language-kotlin"><span class="code-fade"><span class="token keyword">override</span> <span class="token keyword">fun</span> <span class="token function">onDraw</span><span class="token punctuation">(</span>c<span class="token operator">:</span> Canvas<span class="token punctuation">,</span> parent<span class="token operator">:</span> RecyclerView<span class="token punctuation">,</span> state<span class="token operator">:</span> RecyclerView<span class="token punctuation">.</span>State<span class="token punctuation">)</span> <span class="token punctuation">{</span></span>
+<span class="code-fade"></span>
+<span class="code-fade">    <span class="token comment">/*...*/</span></span>
+<span class="code-fade"></span>
+<span class="code-fade">    <span class="token keyword">for</span> <span class="token punctuation">(</span>i <span class="token keyword">in</span> <span class="token number">0</span> until parent<span class="token punctuation">.</span>childCount<span class="token punctuation">)</span> <span class="token punctuation">{</span></span>
+<span class="code-fade"></span>
+<span class="code-fade">        <span class="token comment">/*...*/</span></span>
+<span class="code-fade"></span>
+<span class="code-fade">        <span class="token comment">// process only message items</span></span>
+<span class="code-fade">        <span class="token keyword">if</span> <span class="token punctuation">(</span>itemViewType <span class="token operator">!=</span> meItemViewType <span class="token operator">&amp;&amp;</span> itemViewType <span class="token operator">!=</span> youItemViewType<span class="token punctuation">)</span> <span class="token punctuation">{</span></span>
+<span class="code-fade">            <span class="token keyword">continue</span></span>
+<span class="code-fade">        <span class="token punctuation">}</span></span>
+<span class="code-fade"></span>
+<span class="code-fade">        <span class="token comment">/*...*/</span></span>
+<span class="code-fade"></span>
+<span class="code-fade">        <span class="token comment">// apply view bounds</span></span>
+<span class="code-fade">        rectF<span class="token punctuation">.</span><span class="token function">set</span><span class="token punctuation">(</span>x<span class="token punctuation">,</span> y<span class="token punctuation">,</span> x <span class="token operator">+</span> textView<span class="token punctuation">.</span>width<span class="token punctuation">,</span> y <span class="token operator">+</span> textView<span class="token punctuation">.</span>height<span class="token punctuation">)</span></span>
+<span class="code-fade"></span>
+<span class="code-fade">        <span class="token comment">// a single message in a group</span></span>
+<span class="code-fade">        <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token operator">!</span>previousItemTheSameType <span class="token operator">&amp;&amp;</span> <span class="token operator">!</span>nextItemTheSameType<span class="token punctuation">)</span> <span class="token punctuation">{</span></span>
+<span class="code-fade"></span>
+<span class="code-fade">            <span class="token comment">// just a regular rounded rect for all corners</span></span>
+<span class="code-fade">            path<span class="token punctuation">.</span><span class="token function">addRoundRect</span><span class="token punctuation">(</span>rectF<span class="token punctuation">,</span> regularCornerRadiusF<span class="token punctuation">,</span> regularCornerRadiusF<span class="token punctuation">,</span> Path<span class="token punctuation">.</span>Direction<span class="token punctuation">.</span>CCW<span class="token punctuation">)</span></span>
+<span class="code-fade"></span>
+<span class="code-fade">        <span class="token punctuation">}</span> <span class="token keyword">else</span> <span class="token punctuation">{</span></span>
+<span class="code-fade">            <span class="token comment">/*...*/</span></span>
+<span class="code-fade">        <span class="token punctuation">}</span></span>
+<span class="code-fade"></span>
+        <span class="token comment">// draw item</span>
+        c<span class="token punctuation">.</span><span class="token function">withSave</span> <span class="token punctuation">{</span>
+
+            <span class="token comment">// clip prepared path</span>
+            c<span class="token punctuation">.</span><span class="token function">clipPath</span><span class="token punctuation">(</span>path<span class="token punctuation">)</span>
+
+            <span class="token comment">// we</span>
+            <span class="token keyword">val</span> drawable <span class="token operator">=</span> <span class="token keyword">if</span> <span class="token punctuation">(</span>itemViewType <span class="token operator">==</span> meItemViewType<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+                config<span class="token punctuation">.</span>meBackgroundDrawable
+            <span class="token punctuation">}</span> <span class="token keyword">else</span> <span class="token punctuation">{</span>
+                config<span class="token punctuation">.</span>youBackgroundDrawable
+            <span class="token punctuation">}</span>
+
+            <span class="token comment">// ensure drawable bounds</span>
+            <span class="token comment">// previously we were listening for RecyclerView onGlobalLayout events,</span>
+            <span class="token comment">// but as drawable bounds are lazy (it checks if bounds have changed internally)</span>
+            <span class="token comment">// we are safe to set them each time</span>
+            drawable<span class="token punctuation">.</span><span class="token function">setBounds</span><span class="token punctuation">(</span><span class="token number">0</span><span class="token punctuation">,</span> <span class="token number">0</span><span class="token punctuation">,</span> parent<span class="token punctuation">.</span>width<span class="token punctuation">,</span> parent<span class="token punctuation">.</span>height<span class="token punctuation">)</span>
+
+            <span class="token comment">// draw it</span>
+            drawable<span class="token punctuation">.</span><span class="token function">draw</span><span class="token punctuation">(</span>c<span class="token punctuation">)</span>
+        <span class="token punctuation">}</span>
+<span class="code-fade">    <span class="token comment">/*...*/</span></span>
+<span class="code-fade"><span class="token punctuation">}</span></span>
+<span class="code-fade"></span></code></pre>
+        <p>There is a <code>Canvas.withSave</code> extension method which looks like this:</p>
+        <pre><code class="language-kotlin"><span class="token keyword">private</span> <span class="token keyword">inline</span> <span class="token keyword">fun</span> Canvas<span class="token punctuation">.</span><span class="token function">withSave</span><span class="token punctuation">(</span>action<span class="token operator">:</span> Canvas<span class="token punctuation">.</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">-></span> Unit<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token keyword">val</span> save <span class="token operator">=</span> <span class="token keyword">this</span><span class="token punctuation">.</span><span class="token function">save</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+    <span class="token keyword">try</span> <span class="token punctuation">{</span>
+        <span class="token function">action</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+    <span class="token punctuation">}</span> <span class="token keyword">finally</span> <span class="token punctuation">{</span>
+        <span class="token keyword">this</span><span class="token punctuation">.</span><span class="token function">restoreToCount</span><span class="token punctuation">(</span>save<span class="token punctuation">)</span>
+    <span class="token punctuation">}</span>
+<span class="token punctuation">}</span>
+</code></pre>
+        <p>So, with all this in place we should have a working solution already. Do we?</p>
+        <p>Alright-alight, calm down. Yes, we do. If you launch the app now you will (finally) see the working implementation</p>
+        <video controls="true" loop poster="/assets/video/gradient-messenger-round-2-preview.jpg">
+          <source src="/assets/video/gradient-messenger-round-2.mp4" type="video/mp4"> You browser does not support mp4 playback, try downloading video file <a href="/assets/video/gradient-messenger-round-2.mp4">directly</a>
+        </video>
+        <h2>[Bonus] Animations</h2>
+        <p>Our implementation lacks few details but the most important one (at least for a chat application) is the appearance animation of new messages. Good news is — there are only few lines that we should modify in order to be <code>RecyclerView.ItemAnimator</code> ready:</p>
+        <ul>
+          <li>we must take into account the <code>translationY</code> property of a chat message view</li>
+          <li>we must take into account the alpha property of a chat message view</li>
+        </ul>
+        <pre><code class="language-kotlin"><span class="code-fade"><span class="token keyword">override</span> <span class="token keyword">fun</span> <span class="token function">onDraw</span><span class="token punctuation">(</span>c<span class="token operator">:</span> Canvas<span class="token punctuation">,</span> parent<span class="token operator">:</span> RecyclerView<span class="token punctuation">,</span> state<span class="token operator">:</span> RecyclerView<span class="token punctuation">.</span>State<span class="token punctuation">)</span> <span class="token punctuation">{</span></span>
+<span class="code-fade"></span>
+<span class="code-fade">    <span class="token comment">/*...*/</span></span>
+<span class="code-fade"></span>
+<span class="code-fade">    <span class="token keyword">for</span> <span class="token punctuation">(</span>i <span class="token keyword">in</span> <span class="token number">0</span> until parent<span class="token punctuation">.</span>childCount<span class="token punctuation">)</span> <span class="token punctuation">{</span></span>
+<span class="code-fade"></span>
+<span class="code-fade">        <span class="token comment">/*...*/</span></span>
+<span class="code-fade"></span>
+        <span class="token comment">// it's required for us to have x,y coordinates _relative_ to RecyclerView</span>
+        <span class="token comment">// convert to floats</span>
+        <span class="token comment">// apply translationY for item animations (as we know that we operate on a vertical list)</span>
+        <span class="token comment">// if we would operate on a grid then translationX should also be taken into account</span>
+        <span class="token keyword">val</span> <span class="token punctuation">(</span>x<span class="token punctuation">,</span> y<span class="token punctuation">)</span> <span class="token operator">=</span> textView<span class="token punctuation">.</span><span class="token function">relativeTo</span><span class="token punctuation">(</span>parent<span class="token punctuation">)</span>
+                <span class="token punctuation">.</span><span class="token function">let</span> <span class="token punctuation">{</span> <span class="token function">Pair</span><span class="token punctuation">(</span>it<span class="token punctuation">.</span>x<span class="token punctuation">.</span><span class="token function">toFloat</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span> it<span class="token punctuation">.</span>y<span class="token punctuation">.</span><span class="token function">toFloat</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">+</span> view<span class="token punctuation">.</span>translationY<span class="token punctuation">)</span> <span class="token punctuation">}</span>
+<span class="code-fade"></span>
+<span class="code-fade">        <span class="token comment">/*...*/</span></span>
+<span class="code-fade"></span>
+<span class="code-fade">        <span class="token comment">// draw item</span></span>
+<span class="code-fade">        c<span class="token punctuation">.</span><span class="token function">withSave</span> <span class="token punctuation">{</span></span>
+<span class="code-fade"></span>
+<span class="code-fade">            <span class="token comment">// clip prepared path</span></span>
+<span class="code-fade">            c<span class="token punctuation">.</span><span class="token function">clipPath</span><span class="token punctuation">(</span>path<span class="token punctuation">)</span></span>
+<span class="code-fade"></span>
+<span class="code-fade">            <span class="token comment">/*...*/</span></span>
+<span class="code-fade"></span>
+            <span class="token comment">// calculate alpha that will be applied to items (for appear/disappear animations)</span>
+            drawable<span class="token punctuation">.</span>alpha <span class="token operator">=</span> <span class="token punctuation">(</span>view<span class="token punctuation">.</span>alpha <span class="token operator">*</span> <span class="token number">255.0F</span> <span class="token operator">+</span> <span class="token number">0.5F</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">toInt</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+<span class="code-fade"></span>
+<span class="code-fade">            <span class="token comment">// draw it</span></span>
+<span class="code-fade">            drawable<span class="token punctuation">.</span><span class="token function">draw</span><span class="token punctuation">(</span>c<span class="token punctuation">)</span></span>
+<span class="code-fade">        <span class="token punctuation">}</span></span>
+<span class="code-fade">    <span class="token punctuation">}</span></span>
+<span class="code-fade"><span class="token punctuation">}</span></span>
+<span class="code-fade"></span></code></pre>
+        <h2>[Bonus] <code>Me</code> background</h2>
+        <p>As I had mentioned we can use any <code>Drawable</code> for <code>me</code> chat messages (and have the same fixed background scrolling behavior). Here's an example of what can be done with <em>that</em>:</p>
+        <video controls="true" loop poster="/assets/video/gradient-messenger-round-2-1-preview.jpg">
+          <source src="/assets/video/gradient-messenger-round-2-1.mp4" type="video/mp4"> You browser does not support mp4 playback, try downloading video file <a href="/assets/video/gradient-messenger-round-2-1.mp4">directly</a>
+        </video>
+        <hr />
+        <p>Source code can be found <a href="https://github.com/noties/BlogProjects/tree/master/02-GradientMessengerRound">here</a></p>
+      </div>
+      <div class="post-date">
+        <em>Saturday, May 18, 2019</em>
+      </div>
+      <hr style="height: 0.1em;" />
+      <div class="post-navigation">
+        <div class="post-navigation-item previous-page">
+          <span class="post-navigation-symbol">&lt; Previous</span>
+          <a href="/blog/2019/05/13/kotlin-is-fun/index.html">Kotlin is fun!!</a>
+        </div>
+        <div class="post-navigation-item next-page">
+          <span class="post-navigation-symbol">Next &gt;</span>
+          <a href="/blog/2019/07/18/google-pixel/index.html">Google Pixel</a>
+        </div>
+      </div>
+    </div>
+    <div class="discuss" style="margin-top: 3em;">
+      <script src="https://utteranc.es/client.js" repo="noties/noties.github.io" issue-term="pathname" label="discuss" theme="github-light" crossorigin="anonymous" async>
+      </script>
+    </div>
+  </main>
+  <footer>
+    <div class="footer-content">
+      <div style="margin-bottom: 1em;">&copy; Dimitry Ivanov</div>
+      <div class="footer-ref"><svg viewBox="0 0 16 16" width="16px" height="16px" xmlns="http://www.w3.org/2000/svg">
+          <path class="svg-path" d="M7.999,0.431c-4.285,0-7.76,3.474-7.76,7.761 c0,3.428,2.223,6.337,5.307,7.363c0.388,0.071,0.53-0.168,0.53-0.374c0-0.184-0.007-0.672-0.01-1.32 c-2.159,0.469-2.614-1.04-2.614-1.04c-0.353-0.896-0.862-1.135-0.862-1.135c-0.705-0.481,0.053-0.472,0.053-0.472 c0.779,0.055,1.189,0.8,1.189,0.8c0.692,1.186,1.816,0.843,2.258,0.645c0.071-0.502,0.271-0.843,0.493-1.037 C4.86,11.425,3.049,10.76,3.049,7.786c0-0.847,0.302-1.54,0.799-2.082C3.768,5.507,3.501,4.718,3.924,3.65 c0,0,0.652-0.209,2.134,0.796C6.677,4.273,7.34,4.187,8,4.184c0.659,0.003,1.323,0.089,1.943,0.261 c1.482-1.004,2.132-0.796,2.132-0.796c0.423,1.068,0.157,1.857,0.077,2.054c0.497,0.542,0.798,1.235,0.798,2.082 c0,2.981-1.814,3.637-3.543,3.829c0.279,0.24,0.527,0.713,0.527,1.437c0,1.037-0.01,1.874-0.01,2.129 c0,0.208,0.14,0.449,0.534,0.373c3.081-1.028,5.302-3.935,5.302-7.362C15.76,3.906,12.285,0.431,7.999,0.431z" /></svg> <a href="https://github.com/noties">github.com/noties</a></div>
+      <div class="footer-ref"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16px" height="16px">
+          <path id="path28_1_" d="M 6.54 21.559 L 6.54 8.66 L 2.253 8.66 L 2.253 21.559 L 6.54 21.559 Z M 4.398 6.898 C 5.892 6.898 6.823 5.908 6.823 4.67 C 6.795 3.404 5.892 2.441 4.426 2.441 C 2.959 2.441 2 3.404 2 4.67 C 2 5.908 2.93 6.898 4.369 6.898 L 4.398 6.898 Z" class="svg-path" stroke-width="0.123663656" />
+          <path id="path30_1_" d="M 8.913 21.559 L 13.201 21.559 L 13.201 14.355 C 13.201 13.97 13.229 13.584 13.342 13.309 C 13.651 12.538 14.357 11.741 15.541 11.741 C 17.093 11.741 17.713 12.924 17.713 14.658 L 17.713 21.559 L 22 21.559 L 22 14.162 C 22 10.2 19.885 8.357 17.064 8.357 C 14.752 8.357 13.736 9.649 13.172 10.53 L 13.201 10.53 L 13.201 8.66 L 8.913 8.66 C 8.97 9.87 8.913 21.559 8.913 21.559 Z" class="svg-path" stroke-width="0.123663656" />
+        </svg> <a href="https://linkedin.com/in/dimitryivanov">linkedin.com/in/dimitryivanov</a></div>
+      <div class="footer-ref"><svg fill="#828282" height="16" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg">
+          <path class="svg-path" d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z" />
+          <path d="M0 0h24v24H0z" fill="none" />
+        </svg> <a href="mailto:di@noties.io">di@noties.io</a></div>
+    </div>
+  </footer>
+  <script>
+const videos = document.querySelectorAll('video');
+if (videos && videos.length > 0) {
+  // https://stackoverflow.com/a/7557433/6745174
+  const isElementInViewPort = (element) => {
+    const rect = element.getBoundingClientRect();
+    const viewPort = {
+      left: 0,
+      top: 0,
+      right: (window.innerWidth || document.documentElement.clientWidth),
+      bottom: (window.innerHeight || document.documentElement.clientHeight)
+    }
+    console.log(element, rect, viewPort);
+    // we should look for overlapping, so if a part is visible in view-port, we
+    // consider element to be also visible
+    return (
+      (rect.left < viewPort.right) && (viewPort.left < rect.right) && (rect.top < viewPort.bottom) && (viewPort.top < rect.bottom));
+  };
+  const isPlaying = (element) => {
+    return (element.currentTime > 0 && !element.paused && !element.ended);
+  };
+  const handler = (event) => {
+    for (video of videos) {
+      if (isPlaying(video) && !isElementInViewPort(video)) {
+        video.pause()
+      }
+    }
+  };
+  window.addEventListener('DOMContentLoaded', handler);
+  window.addEventListener('load', handler);
+  window.addEventListener('resize', handler);
+  window.addEventListener('scroll', handler);
+}
+  </script>
+</body>
+
+</html>

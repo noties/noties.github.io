@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Enhance Android source code for developers | Di's blog</title>
+  <link rel="icon" sizes="32x32" type="images/png" href="/favicon-32x32.png">
+  <link rel="icon" sizes="32x32" type="images/png" href="/favicon-16x16.png">
+  <link rel="icon" href="/favicon.ico">
+  <link rel="stylesheet" type="text/css" href="/main.css">
+  <link rel="alternate" type="application/rss+xml" title="RSS" href="/rss.xml">
+  <meta name="author" content="Dimitry Ivanov">
+  <meta property="og:title" content="Enhance Android source code for developers">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://noties.io/blog/2018/01/31/enhance/index.html">
+  <meta property="og:image" content="https://noties.iohttps://github.com/noties/Enhance/raw/master/art/logo.png">
+</head>
+
+<body>
+  <header>
+    <img class="avatar" src="/av.jpg" alt="Dimitry Ivanov">
+    <h1 style="font-family: monospace">Enhance Android source code for developers</h1>
+    <a class="about" href="/">by DIMITRY IVANOV</a>
+  </header>
+  <main>
+    <div class="container">
+      <div class="content">
+        <p>It's actually a follow-up of the previous <a href="/blog/2018/01/28/since-tag/index.html">@since tag to Android source distribution</a>. Turned out this can be done by ourselves (plus a bit more). Here is the final result:</p>
+        <pre><code class="language-java"><span class="token comment">/**
+ * Called by the system when the activity changes from fullscreen mode to multi-window mode and
+ * visa-versa.
+ *
+ * @see android.R.attr#resizeableActivity
+ * @param isInMultiWindowMode True if the activity is in multi-window mode.
+ * @deprecated Use {@link #onMultiWindowModeChanged(boolean, Configuration)} instead.
+ * @since 7.0 Nougat (24)
+ * @deprecated 8.0 Oreo (26)
+ */</span>
+<span class="token annotation punctuation">@Deprecated</span>
+<span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">onMultiWindowModeChanged</span><span class="token punctuation">(</span><span class="token keyword">boolean</span> isInMultiWindowMode<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token comment">// Left deliberately empty. There should be no side effects if a direct</span>
+    <span class="token comment">// subclass of Activity does not call super.</span>
+<span class="token punctuation">}</span>
+</code></pre>
+        <p>TLDR: <a href="https://github.com/noties/Enhance">Enhance!</a></p>
+        <p id="excerpt-continue"></p>
+        <p>I decided to investigate if it's possible to obtain the API versions information somehow. For starters, <a href="https://developer.android.com/reference/packages.html">documentation reference</a> has it. So there must be a way to extract it. I checked the source code and found out that version info is hardcoded into CSS classes:</p>
+        <pre><code class="language-html"><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>li</span> <span class="token attr-name">class</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>api apilevel-21 absent<span class="token punctuation">"</span></span> <span class="token punctuation">/></span></span>
+</code></pre>
+        <p>Not a very good start. And not much to do with this data even if we scrap it (packages, classes, methods, fields all must be somehow distinguished).</p>
+        <p>Well, we picked an easy target first. Let's find something of our own size. We want to enhance experience of a developer when working with an IDE ( <em>an? ;) </em>) so API version information is easily available when navigating through source code. Is there anything in <em>an</em> IDE that somehow resembles this behavior? The closest (and the only one actually) is <a href="http://tools.android.com/tips/lint-checks">Lint</a> and it's <code>NewApi</code> and <code>Deprecated</code> rules.</p>
+        <p><em>...time passed...</em></p>
+        <p>Turned out that Lint is using the <code>api-versions.xml</code> file as an API version information storage. It is located in <code>{ANDROID_HOME}/platforms/android-{sdk}/data/</code>. It looks like this:</p>
+        <pre><code class="language-xml"><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>class</span> <span class="token attr-name">name</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>android/database/AbstractCursor<span class="token punctuation">"</span></span> <span class="token attr-name">since</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>1<span class="token punctuation">"</span></span><span class="token punctuation">></span></span>
+	<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>extends</span> <span class="token attr-name">name</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>java/lang/Object<span class="token punctuation">"</span></span><span class="token punctuation">/></span></span>
+	<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>implements</span> <span class="token attr-name">name</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>android/database/CrossProcessCursor<span class="token punctuation">"</span></span><span class="token punctuation">/></span></span>
+	<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>method</span> <span class="token attr-name">name</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span><span class="token entity" title="&lt;">&amp;lt;</span>init>()V<span class="token punctuation">"</span></span><span class="token punctuation">/></span></span>
+	<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>method</span> <span class="token attr-name">name</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>checkPosition()V<span class="token punctuation">"</span></span><span class="token punctuation">/></span></span>
+	<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>method</span> <span class="token attr-name">name</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>getNotificationUri()Landroid/net/Uri;<span class="token punctuation">"</span></span> <span class="token attr-name">since</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>11<span class="token punctuation">"</span></span><span class="token punctuation">/></span></span>
+	<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>method</span> <span class="token attr-name">name</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>getUpdatedField(I)Ljava/lang/Object;<span class="token punctuation">"</span></span> <span class="token attr-name">deprecated</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>16<span class="token punctuation">"</span></span><span class="token punctuation">/></span></span>
+	<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>method</span> <span class="token attr-name">name</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>isFieldUpdated(I)Z<span class="token punctuation">"</span></span> <span class="token attr-name">deprecated</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>16<span class="token punctuation">"</span></span><span class="token punctuation">/></span></span>
+	<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>method</span> <span class="token attr-name">name</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>onChange(Z)V<span class="token punctuation">"</span></span><span class="token punctuation">/></span></span>
+	<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>field</span> <span class="token attr-name">name</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>mClosed<span class="token punctuation">"</span></span> <span class="token attr-name">deprecated</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>23<span class="token punctuation">"</span></span><span class="token punctuation">/></span></span>
+	<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>field</span> <span class="token attr-name">name</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>mContentResolver<span class="token punctuation">"</span></span> <span class="token attr-name">deprecated</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>23<span class="token punctuation">"</span></span><span class="token punctuation">/></span></span>
+	<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>field</span> <span class="token attr-name">name</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>mCurrentRowID<span class="token punctuation">"</span></span> <span class="token attr-name">deprecated</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>16<span class="token punctuation">"</span></span> <span class="token attr-name">removed</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>23<span class="token punctuation">"</span></span><span class="token punctuation">/></span></span>
+	<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>field</span> <span class="token attr-name">name</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>mPos<span class="token punctuation">"</span></span> <span class="token attr-name">deprecated</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>23<span class="token punctuation">"</span></span><span class="token punctuation">/></span></span>
+	<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>field</span> <span class="token attr-name">name</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>mRowIdColumnIndex<span class="token punctuation">"</span></span> <span class="token attr-name">deprecated</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>16<span class="token punctuation">"</span></span> <span class="token attr-name">removed</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>23<span class="token punctuation">"</span></span><span class="token punctuation">/></span></span>
+	<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>field</span> <span class="token attr-name">name</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>mUpdatedRows<span class="token punctuation">"</span></span> <span class="token attr-name">deprecated</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>16<span class="token punctuation">"</span></span> <span class="token attr-name">removed</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>23<span class="token punctuation">"</span></span><span class="token punctuation">/></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>class</span><span class="token punctuation">></span></span>
+</code></pre>
+        <p>It might be scary at first if you are not on good terms with Java bytecode signatures, but it's a great source of what we are looking for.</p>
+        <p>We have our data source, but let's keep it for now, as we must find a way to apply this information to the Android source code. Of cause we won't be <em>compiling</em> Android sources. We won't succeed anyway and what good will it give us? What we need is to find a good text processor, that will allow slight modification of some of Java code, but keeping everything else as it is.</p>
+        <p>First that comes to mind is <a href="http://www.antlr.org">ANTRL</a>. But I had experience with it previously and decided to look for other available options knowing that at any moment I can use ANTRL instead if I won't find anything suitable.</p>
+        <p><em>...no time passed at all...</em></p>
+        <p>I have found a candidate for the task pretty quickly (first result in <em>you-know-where</em>): <a href="https://github.com/javaparser/javaparser">Javaparser</a>. I decided to give it a go.</p>
+        <pre><code class="language-java"><span class="token keyword">final</span> <span class="token class-name">CompilationUnit</span> unit<span class="token punctuation">;</span>
+<span class="token keyword">try</span> <span class="token punctuation">{</span>
+    unit <span class="token operator">=</span> <span class="token class-name">JavaParser</span><span class="token punctuation">.</span><span class="token function">parse</span><span class="token punctuation">(</span>file<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span> <span class="token keyword">catch</span> <span class="token punctuation">(</span><span class="token class-name">FileNotFoundException</span> e<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token keyword">throw</span> <span class="token keyword">new</span> <span class="token class-name">RuntimeException</span><span class="token punctuation">(</span>e<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span>
+</code></pre>
+        <p>At this point we have already an <a href="https://en.wikipedia.org/wiki/Abstract_syntax_tree">AST</a> ready for traversal. I tried to modify some mock Java sources and it worked as expected. Now it was the time to glue the parts together.</p>
+        <p>At this point <em>glueing</em> would mean solving 2 problems:</p>
+        <ul>
+          <li>
+            <p>Correctly identify traversed class</p>
+            <p>In the <code>api-versions.xml</code> each class (including nested ones) are represented by independent entry, for example: <code>android/database/AbstractCursor</code>, <code>android/database/AbstractCursor$SelfContentObserver</code></p>
+          </li>
+          <li>
+            <p>Correctly identify traversed methods:</p>
+            <p>In the <code>api-versions.xml</code> methods are represented as they would be in Java bytecode: <code>getUpdatedField(I)Ljava/lang/Object;</code>, <code>&lt;init&gt;(II)V</code></p>
+          </li>
+        </ul>
+        <p>First one is easy to solve as we are processing single source file at a time. So: one file - one package; Nested classes can be declared only in the same source file. So no problem here.</p>
+        <p>Second one is a bit harder. As we are dealing with independent source files it would be extremely hard to create a signature like this: <code>startIntentSenderFromChild(Landroid/app/Activity;Landroid/content/IntentSender;ILandroid/content/Intent;IIILandroid/os/Bundle;)V</code> without proper symbol resolution (be it manual tracking of imports or using provided by javaparser <code>javaparser-symbol-solver-core</code> artifact). So I decided to <em>tweak</em> signature a bit to be like this: <code>startIntentSenderFromChild(LActivity;LIntentSender;ILIntent;IIILBundle;)V</code> (Please note that it's only for the <em>method</em> signatures). We exclude package information <em>and</em> parent info (<code>Landroid/app/AlertDialog$Builder;</code> -&gt; <code>LBuilder;</code>). It's <em>not</em> impossible that there will be <em>no</em> collisions, but it's a sacrifice I'm willing to make.</p>
+        <p>Then I had another idea of what we can do <em>more</em>. As we are processing source files why not adding ... <strong>automatic code formatting</strong>? Android source code is a great example of consistency &lt;/s&gt; when it comes to formatting, so why not adding AOSP code formatting to it? Thankfully Google has released a tool just for this task: <a href="https://github.com/google/google-java-format">google-java-format</a>.</p>
+        <p>Some examples of what output look like:</p>
+        <p>UNMODIFIED:</p>
+        <pre><code class="language-java"><span class="token comment">/**
+ * Create a new key event.
+ *
+ * @param downTime The time (in {@link android.os.SystemClock#uptimeMillis})
+ * at which this key code originally went down.
+ * @param eventTime The time (in {@link android.os.SystemClock#uptimeMillis})
+ * at which this event happened.
+ * @param action Action code: either {@link #ACTION_DOWN},
+ * {@link #ACTION_UP}, or {@link #ACTION_MULTIPLE}.
+ * @param code The key code.
+ * @param repeat A repeat count for down events (> 0 if this is after the
+ * initial down) or event count for multiple events.
+ * @param metaState Flags indicating which meta keys are currently pressed.
+ * @param deviceId The device ID that generated the key event.
+ * @param scancode Raw device scan code of the event.
+ * @param flags The flags for this key event
+ * @param source The input source such as {@link InputDevice#SOURCE_KEYBOARD}.
+ */</span>
+<span class="token keyword">public</span> <span class="token class-name">KeyEvent</span><span class="token punctuation">(</span><span class="token keyword">long</span> downTime<span class="token punctuation">,</span> <span class="token keyword">long</span> eventTime<span class="token punctuation">,</span> <span class="token keyword">int</span> action<span class="token punctuation">,</span>
+                <span class="token keyword">int</span> code<span class="token punctuation">,</span> <span class="token keyword">int</span> repeat<span class="token punctuation">,</span> <span class="token keyword">int</span> metaState<span class="token punctuation">,</span>
+                <span class="token keyword">int</span> deviceId<span class="token punctuation">,</span> <span class="token keyword">int</span> scancode<span class="token punctuation">,</span> <span class="token keyword">int</span> flags<span class="token punctuation">,</span> <span class="token keyword">int</span> source<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    mDownTime <span class="token operator">=</span> downTime<span class="token punctuation">;</span>
+    mEventTime <span class="token operator">=</span> eventTime<span class="token punctuation">;</span>
+    mAction <span class="token operator">=</span> action<span class="token punctuation">;</span>
+    mKeyCode <span class="token operator">=</span> code<span class="token punctuation">;</span>
+    mRepeatCount <span class="token operator">=</span> repeat<span class="token punctuation">;</span>
+    mMetaState <span class="token operator">=</span> metaState<span class="token punctuation">;</span>
+    mDeviceId <span class="token operator">=</span> deviceId<span class="token punctuation">;</span>
+    mScanCode <span class="token operator">=</span> scancode<span class="token punctuation">;</span>
+    mFlags <span class="token operator">=</span> flags<span class="token punctuation">;</span>
+    mSource <span class="token operator">=</span> source<span class="token punctuation">;</span>
+<span class="token punctuation">}</span>
+</code></pre>
+        <p>AOSP:</p>
+        <pre><code class="language-java"><span class="token comment">/**
+ * Create a new key event.
+ *
+ * @param downTime The time (in {@link android.os.SystemClock#uptimeMillis}) at which this key
+ *     code originally went down.
+ * @param eventTime The time (in {@link android.os.SystemClock#uptimeMillis}) at which this
+ *     event happened.
+ * @param action Action code: either {@link #ACTION_DOWN}, {@link #ACTION_UP}, or {@link
+ *     #ACTION_MULTIPLE}.
+ * @param code The key code.
+ * @param repeat A repeat count for down events (> 0 if this is after the initial down) or event
+ *     count for multiple events.
+ * @param metaState Flags indicating which meta keys are currently pressed.
+ * @param deviceId The device ID that generated the key event.
+ * @param scancode Raw device scan code of the event.
+ * @param flags The flags for this key event
+ * @param source The input source such as {@link InputDevice#SOURCE_KEYBOARD}.
+ * @since 2.3 Gingerbread (9)
+ */</span>
+<span class="token keyword">public</span> <span class="token class-name">KeyEvent</span><span class="token punctuation">(</span>
+        <span class="token keyword">long</span> downTime<span class="token punctuation">,</span>
+        <span class="token keyword">long</span> eventTime<span class="token punctuation">,</span>
+        <span class="token keyword">int</span> action<span class="token punctuation">,</span>
+        <span class="token keyword">int</span> code<span class="token punctuation">,</span>
+        <span class="token keyword">int</span> repeat<span class="token punctuation">,</span>
+        <span class="token keyword">int</span> metaState<span class="token punctuation">,</span>
+        <span class="token keyword">int</span> deviceId<span class="token punctuation">,</span>
+        <span class="token keyword">int</span> scancode<span class="token punctuation">,</span>
+        <span class="token keyword">int</span> flags<span class="token punctuation">,</span>
+        <span class="token keyword">int</span> source<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    mDownTime <span class="token operator">=</span> downTime<span class="token punctuation">;</span>
+    mEventTime <span class="token operator">=</span> eventTime<span class="token punctuation">;</span>
+    mAction <span class="token operator">=</span> action<span class="token punctuation">;</span>
+    mKeyCode <span class="token operator">=</span> code<span class="token punctuation">;</span>
+    mRepeatCount <span class="token operator">=</span> repeat<span class="token punctuation">;</span>
+    mMetaState <span class="token operator">=</span> metaState<span class="token punctuation">;</span>
+    mDeviceId <span class="token operator">=</span> deviceId<span class="token punctuation">;</span>
+    mScanCode <span class="token operator">=</span> scancode<span class="token punctuation">;</span>
+    mFlags <span class="token operator">=</span> flags<span class="token punctuation">;</span>
+    mSource <span class="token operator">=</span> source<span class="token punctuation">;</span>
+<span class="token punctuation">}</span>
+</code></pre>
+        <p>Final result:</p>
+        <pre><code class="language-noop">[Enhance] processing took: 02 minutes 28 seconds
+</code></pre>
+        <p>Not that bad for processing the whole Android source code (parse/modify/format/output) as I have encountered greater build times for a <strong>single</strong> Android application.</p>
+        <p><a href="https://github.com/noties/Enhance"><img src="https://github.com/noties/Enhance/raw/master/art/logo.png" /></a></p>
+      </div>
+      <div class="post-date">
+        <em>Wednesday, January 31, 2018</em>
+      </div>
+      <hr style="height: 0.1em;" />
+      <div class="post-navigation">
+        <div class="post-navigation-item previous-page">
+          <span class="post-navigation-symbol">&lt; Previous</span>
+          <a href="/blog/2018/01/28/since-tag/index.html">@since tag to Android source distribution</a>
+        </div>
+        <div class="post-navigation-item next-page">
+          <span class="post-navigation-symbol">Next &gt;</span>
+          <a href="/blog/2018/03/24/local-maven-repo/index.html">Local Maven repository</a>
+        </div>
+      </div>
+    </div>
+    <div class="discuss" style="margin-top: 3em;">
+      <script src="https://utteranc.es/client.js" repo="noties/noties.github.io" issue-term="pathname" label="discuss" theme="github-light" crossorigin="anonymous" async>
+      </script>
+    </div>
+  </main>
+  <footer>
+    <div class="footer-content">
+      <div style="margin-bottom: 1em;">&copy; Dimitry Ivanov</div>
+      <div class="footer-ref"><svg viewBox="0 0 16 16" width="16px" height="16px" xmlns="http://www.w3.org/2000/svg">
+          <path class="svg-path" d="M7.999,0.431c-4.285,0-7.76,3.474-7.76,7.761 c0,3.428,2.223,6.337,5.307,7.363c0.388,0.071,0.53-0.168,0.53-0.374c0-0.184-0.007-0.672-0.01-1.32 c-2.159,0.469-2.614-1.04-2.614-1.04c-0.353-0.896-0.862-1.135-0.862-1.135c-0.705-0.481,0.053-0.472,0.053-0.472 c0.779,0.055,1.189,0.8,1.189,0.8c0.692,1.186,1.816,0.843,2.258,0.645c0.071-0.502,0.271-0.843,0.493-1.037 C4.86,11.425,3.049,10.76,3.049,7.786c0-0.847,0.302-1.54,0.799-2.082C3.768,5.507,3.501,4.718,3.924,3.65 c0,0,0.652-0.209,2.134,0.796C6.677,4.273,7.34,4.187,8,4.184c0.659,0.003,1.323,0.089,1.943,0.261 c1.482-1.004,2.132-0.796,2.132-0.796c0.423,1.068,0.157,1.857,0.077,2.054c0.497,0.542,0.798,1.235,0.798,2.082 c0,2.981-1.814,3.637-3.543,3.829c0.279,0.24,0.527,0.713,0.527,1.437c0,1.037-0.01,1.874-0.01,2.129 c0,0.208,0.14,0.449,0.534,0.373c3.081-1.028,5.302-3.935,5.302-7.362C15.76,3.906,12.285,0.431,7.999,0.431z" /></svg> <a href="https://github.com/noties">github.com/noties</a></div>
+      <div class="footer-ref"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16px" height="16px">
+          <path id="path28_1_" d="M 6.54 21.559 L 6.54 8.66 L 2.253 8.66 L 2.253 21.559 L 6.54 21.559 Z M 4.398 6.898 C 5.892 6.898 6.823 5.908 6.823 4.67 C 6.795 3.404 5.892 2.441 4.426 2.441 C 2.959 2.441 2 3.404 2 4.67 C 2 5.908 2.93 6.898 4.369 6.898 L 4.398 6.898 Z" class="svg-path" stroke-width="0.123663656" />
+          <path id="path30_1_" d="M 8.913 21.559 L 13.201 21.559 L 13.201 14.355 C 13.201 13.97 13.229 13.584 13.342 13.309 C 13.651 12.538 14.357 11.741 15.541 11.741 C 17.093 11.741 17.713 12.924 17.713 14.658 L 17.713 21.559 L 22 21.559 L 22 14.162 C 22 10.2 19.885 8.357 17.064 8.357 C 14.752 8.357 13.736 9.649 13.172 10.53 L 13.201 10.53 L 13.201 8.66 L 8.913 8.66 C 8.97 9.87 8.913 21.559 8.913 21.559 Z" class="svg-path" stroke-width="0.123663656" />
+        </svg> <a href="https://linkedin.com/in/dimitryivanov">linkedin.com/in/dimitryivanov</a></div>
+      <div class="footer-ref"><svg fill="#828282" height="16" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg">
+          <path class="svg-path" d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z" />
+          <path d="M0 0h24v24H0z" fill="none" />
+        </svg> <a href="mailto:di@noties.io">di@noties.io</a></div>
+    </div>
+  </footer>
+  <script>
+const videos = document.querySelectorAll('video');
+if (videos && videos.length > 0) {
+  // https://stackoverflow.com/a/7557433/6745174
+  const isElementInViewPort = (element) => {
+    const rect = element.getBoundingClientRect();
+    const viewPort = {
+      left: 0,
+      top: 0,
+      right: (window.innerWidth || document.documentElement.clientWidth),
+      bottom: (window.innerHeight || document.documentElement.clientHeight)
+    }
+    console.log(element, rect, viewPort);
+    // we should look for overlapping, so if a part is visible in view-port, we
+    // consider element to be also visible
+    return (
+      (rect.left < viewPort.right) && (viewPort.left < rect.right) && (rect.top < viewPort.bottom) && (viewPort.top < rect.bottom));
+  };
+  const isPlaying = (element) => {
+    return (element.currentTime > 0 && !element.paused && !element.ended);
+  };
+  const handler = (event) => {
+    for (video of videos) {
+      if (isPlaying(video) && !isElementInViewPort(video)) {
+        video.pause()
+      }
+    }
+  };
+  window.addEventListener('DOMContentLoaded', handler);
+  window.addEventListener('load', handler);
+  window.addEventListener('resize', handler);
+  window.addEventListener('scroll', handler);
+}
+  </script>
+</body>
+
+</html>

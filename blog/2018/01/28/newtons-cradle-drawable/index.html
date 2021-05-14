@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Newton's Cradle Drawable (Tumbleweed Android) | Di's blog</title>
+  <link rel="icon" sizes="32x32" type="images/png" href="/favicon-32x32.png">
+  <link rel="icon" sizes="32x32" type="images/png" href="/favicon-16x16.png">
+  <link rel="icon" href="/favicon.ico">
+  <link rel="stylesheet" type="text/css" href="/main.css">
+  <link rel="alternate" type="application/rss+xml" title="RSS" href="/rss.xml">
+  <meta name="author" content="Dimitry Ivanov">
+  <meta property="og:title" content="Newton's Cradle Drawable (Tumbleweed Android)">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://noties.io/blog/2018/01/28/newtons-cradle-drawable/index.html">
+</head>
+
+<body>
+  <header>
+    <img class="avatar" src="/av.jpg" alt="Dimitry Ivanov">
+    <h1 style="font-family: monospace">Newton's Cradle Drawable (Tumbleweed Android)</h1>
+    <a class="about" href="/">by DIMITRY IVANOV</a>
+  </header>
+  <main>
+    <div class="container">
+      <div class="content">
+        <p><img src="/assets/gif/newton-cradle.gif" alt="gif" /></p>
+        <p>Implementation steps to create Newton's Cradle drawable for Android.</p>
+        <p id="excerpt-continue"></p>
+        <p>First of all we will need to add <code>tumbleweed-android</code> module to our dependencies.</p>
+        <blockquote class="custom tip" cite="https://github.com/noties/Tumbleweed">
+          <h3>Tumbleweed</h3>
+          <span> Tumbleweed is a small library that brings the power of tween animations for Android Views and Drawables. Allows easy interpolation between any possible values and has great support for combining them in sequences. Utilizes fluent API that is easy to tweak and pleasure to read. </span>
+          <div style="font-size: 0.9em; margin-top: 1em;">
+            <img class="icon" src="/assets/ic_github.svg" />
+            <a href="https://github.com/noties/Tumbleweed">https://github.com/noties/Tumbleweed</a>
+          </div>
+        </blockquote>
+        <pre><code class="language-groovy">implementation <span class="token string">'ru.noties:tumbleweed-android:1.0.1'</span>
+</code></pre>
+        <p>Now we have the <code>DrawableTweenManager</code> that gives us means to create all kind of tweens for our custom drawables. Let's start adding some code. Create an empty implementation of a Drawable:</p>
+        <pre><code class="language-java"><span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">NewtonsCradleDrawable</span> <span class="token keyword">extends</span> <span class="token class-name">Drawable</span> <span class="token punctuation">{</span>
+
+    <span class="token annotation punctuation">@Override</span>
+    <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">draw</span><span class="token punctuation">(</span><span class="token annotation punctuation">@NonNull</span> <span class="token class-name">Canvas</span> canvas<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+        
+    <span class="token punctuation">}</span>
+
+    <span class="token annotation punctuation">@Override</span>
+    <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">setAlpha</span><span class="token punctuation">(</span><span class="token keyword">int</span> alpha<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+        <span class="token comment">// no op</span>
+    <span class="token punctuation">}</span>
+
+    <span class="token annotation punctuation">@Override</span>
+    <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">setColorFilter</span><span class="token punctuation">(</span><span class="token annotation punctuation">@Nullable</span> <span class="token class-name">ColorFilter</span> colorFilter<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+        <span class="token comment">// no op</span>
+    <span class="token punctuation">}</span>
+
+    <span class="token annotation punctuation">@Override</span>
+    <span class="token keyword">public</span> <span class="token keyword">int</span> <span class="token function">getOpacity</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+        <span class="token keyword">return</span> <span class="token class-name">PixelFormat</span><span class="token punctuation">.</span>OPAQUE<span class="token punctuation">;</span>
+    <span class="token punctuation">}</span>
+<span class="token punctuation">}</span>
+</code></pre>
+        <p>Let's throw in some variables for our drawable:</p>
+        <pre><code class="language-java"><span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">NewtonsCradleDrawable</span> <span class="token keyword">extends</span> <span class="token class-name">Drawable</span> <span class="token punctuation">{</span>
+
+    <span class="token comment">// static constant indicating how many physical circles we have</span>
+    <span class="token comment">// 0_00_0, two circles are added for actual interpolation</span>
+    <span class="token keyword">private</span> <span class="token keyword">static</span> <span class="token keyword">final</span> <span class="token keyword">int</span> PARTS <span class="token operator">=</span> <span class="token number">6</span><span class="token punctuation">;</span>
+
+    <span class="token comment">// initialise DrawableTweenManager</span>
+    <span class="token keyword">private</span> <span class="token keyword">final</span> <span class="token class-name">TweenManager</span> tweenManager <span class="token operator">=</span> <span class="token class-name">DrawableTweenManager</span><span class="token punctuation">.</span><span class="token function">create</span><span class="token punctuation">(</span><span class="token keyword">this</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+    <span class="token comment">// Paint object to be used when drawing circles</span>
+    <span class="token keyword">private</span> <span class="token keyword">final</span> <span class="token class-name">Paint</span> paint <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">Paint</span><span class="token punctuation">(</span><span class="token class-name">Paint</span><span class="token punctuation">.</span>ANTI_ALIAS_FLAG<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+    <span class="token comment">// RectF representing bounds of one circle</span>
+    <span class="token keyword">private</span> <span class="token keyword">final</span> <span class="token class-name">RectF</span> rectF <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">RectF</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+    <span class="token comment">// colors of our circles</span>
+    <span class="token keyword">private</span> <span class="token keyword">final</span> <span class="token keyword">int</span><span class="token punctuation">[</span><span class="token punctuation">]</span> colors<span class="token punctuation">;</span>
+
+    <span class="token comment">// duration of our interpolation</span>
+    <span class="token comment">//</span>
+    <span class="token comment">// NB TweenManager uses SECONDS instead of MILLISECONDS, so</span>
+    <span class="token comment">// so, 250L would be 0.25F</span>
+    <span class="token keyword">private</span> <span class="token keyword">final</span> <span class="token keyword">float</span> duration<span class="token punctuation">;</span>
+
+    <span class="token keyword">public</span> <span class="token class-name">NewtonsCradleDrawable</span><span class="token punctuation">(</span><span class="token annotation punctuation">@Size</span><span class="token punctuation">(</span><span class="token number">4</span><span class="token punctuation">)</span> <span class="token annotation punctuation">@NonNull</span> <span class="token keyword">int</span><span class="token punctuation">[</span><span class="token punctuation">]</span> colors<span class="token punctuation">,</span> <span class="token annotation punctuation">@FloatRange</span><span class="token punctuation">(</span>from <span class="token operator">=</span> <span class="token number">.0F</span><span class="token punctuation">)</span> <span class="token keyword">float</span> duration<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+        <span class="token keyword">this</span><span class="token punctuation">.</span>colors <span class="token operator">=</span> colors<span class="token punctuation">;</span>
+        <span class="token keyword">this</span><span class="token punctuation">.</span>duration <span class="token operator">=</span> duration<span class="token punctuation">;</span>
+
+        paint<span class="token punctuation">.</span><span class="token function">setStyle</span><span class="token punctuation">(</span><span class="token class-name">Paint</span><span class="token punctuation">.</span><span class="token class-name">Style</span><span class="token punctuation">.</span>FILL<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">}</span>
+
+    <span class="token comment">/* Not changed omitted */</span>
+<span class="token punctuation">}</span>
+</code></pre>
+        <p>For the sake of brevity we will make our Drawable <em>intermediate</em> (aka always running like a progress indicator). Of cause we could implement <code>Animatable</code> and start/stop animation manually, but this is a bit off the scope of this article.</p>
+        <p>So, let's override <code>onBoundsChange</code> method to calculate the coordinates of our circles:</p>
+        <pre><code class="language-java"><span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">NewtonsCradleDrawable</span> <span class="token keyword">extends</span> <span class="token class-name">Drawable</span> <span class="token punctuation">{</span>
+
+    <span class="token comment">// this variable is holding our margins (so circles are positioned correctly on a Canvas)</span>
+    <span class="token keyword">private</span> <span class="token class-name">Margins</span> margins<span class="token punctuation">;</span>
+
+    <span class="token annotation punctuation">@Override</span>
+    <span class="token keyword">protected</span> <span class="token keyword">void</span> <span class="token function">onBoundsChange</span><span class="token punctuation">(</span><span class="token class-name">Rect</span> bounds<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+        <span class="token keyword">super</span><span class="token punctuation">.</span><span class="token function">onBoundsChange</span><span class="token punctuation">(</span>bounds<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+        <span class="token comment">// we will stop all possibly running interpolations here</span>
+        tweenManager<span class="token punctuation">.</span><span class="token function">killAll</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+        <span class="token comment">// our drawable will occupy square shape, so find</span>
+        <span class="token comment">// the smallest dimension and use it as a base</span>
+
+        <span class="token keyword">final</span> <span class="token keyword">int</span> width <span class="token operator">=</span> bounds<span class="token punctuation">.</span><span class="token function">width</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">final</span> <span class="token keyword">int</span> height <span class="token operator">=</span> bounds<span class="token punctuation">.</span><span class="token function">height</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+        <span class="token keyword">final</span> <span class="token keyword">int</span> side <span class="token operator">=</span> <span class="token class-name">Math</span><span class="token punctuation">.</span><span class="token function">min</span><span class="token punctuation">(</span>width<span class="token punctuation">,</span> height<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+        <span class="token comment">// this is the diameter of our circles</span>
+        <span class="token keyword">final</span> <span class="token keyword">int</span> diameter <span class="token operator">=</span> side <span class="token operator">/</span> PARTS<span class="token punctuation">;</span>
+
+        <span class="token comment">// calculate our margins</span>
+        margins <span class="token operator">=</span> <span class="token function">calculateMargins</span><span class="token punctuation">(</span>width<span class="token punctuation">,</span> height<span class="token punctuation">,</span> side<span class="token punctuation">,</span> diameter<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        
+        <span class="token comment">// apply calculated bounds</span>
+        rectF<span class="token punctuation">.</span><span class="token function">set</span><span class="token punctuation">(</span><span class="token number">0</span><span class="token punctuation">,</span> <span class="token number">0</span><span class="token punctuation">,</span> diameter<span class="token punctuation">,</span> diameter<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+        <span class="token function">startAnimation</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">}</span>
+
+    <span class="token keyword">private</span> <span class="token keyword">void</span> <span class="token function">startAnimation</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+        <span class="token comment">// we will get to it in the next section</span>
+    <span class="token punctuation">}</span>
+
+    <span class="token annotation punctuation">@NonNull</span>
+    <span class="token keyword">private</span> <span class="token keyword">static</span> <span class="token class-name">Margins</span> <span class="token function">calculateMargins</span><span class="token punctuation">(</span><span class="token keyword">int</span> width<span class="token punctuation">,</span> <span class="token keyword">int</span> height<span class="token punctuation">,</span> <span class="token keyword">int</span> side<span class="token punctuation">,</span> <span class="token keyword">int</span> diameter<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+
+        <span class="token keyword">final</span> <span class="token keyword">int</span> x <span class="token operator">=</span> <span class="token punctuation">(</span>width <span class="token operator">-</span> side<span class="token punctuation">)</span> <span class="token operator">/</span> <span class="token number">2</span><span class="token punctuation">;</span>
+        <span class="token keyword">final</span> <span class="token keyword">int</span> y <span class="token operator">=</span> <span class="token punctuation">(</span><span class="token punctuation">(</span>height <span class="token operator">-</span> side<span class="token punctuation">)</span> <span class="token operator">/</span> <span class="token number">2</span><span class="token punctuation">)</span> <span class="token operator">+</span> <span class="token punctuation">(</span><span class="token punctuation">(</span>side <span class="token operator">-</span> diameter<span class="token punctuation">)</span> <span class="token operator">/</span> <span class="token number">2</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+        <span class="token keyword">return</span> <span class="token keyword">new</span> <span class="token class-name">Margins</span><span class="token punctuation">(</span>x<span class="token punctuation">,</span> y<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">}</span>
+
+    <span class="token keyword">private</span> <span class="token keyword">static</span> <span class="token keyword">class</span> <span class="token class-name">Margins</span> <span class="token punctuation">{</span>
+        <span class="token keyword">final</span> <span class="token keyword">float</span> x<span class="token punctuation">;</span>
+        <span class="token keyword">final</span> <span class="token keyword">float</span> y<span class="token punctuation">;</span>
+
+        <span class="token class-name">Margins</span><span class="token punctuation">(</span><span class="token keyword">float</span> x<span class="token punctuation">,</span> <span class="token keyword">float</span> y<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+            <span class="token keyword">this</span><span class="token punctuation">.</span>x <span class="token operator">=</span> x<span class="token punctuation">;</span>
+            <span class="token keyword">this</span><span class="token punctuation">.</span>y <span class="token operator">=</span> y<span class="token punctuation">;</span>
+        <span class="token punctuation">}</span>
+    <span class="token punctuation">}</span>
+
+    <span class="token comment">/* Not changed omitted */</span>
+<span class="token punctuation">}</span>
+</code></pre>
+        <p>Now, let's deal with animation. We will be interpolating just 2 properties: <code>left</code> (the travel distance of the left circle) and <code>right</code> (travel distance of the right circle):</p>
+        <pre><code class="language-java"><span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">NewtonsCradleDrawable</span> <span class="token keyword">extends</span> <span class="token class-name">Drawable</span> <span class="token punctuation">{</span>
+
+    <span class="token comment">// travel distance of the left circle</span>
+    <span class="token keyword">private</span> <span class="token keyword">float</span> left<span class="token punctuation">;</span>
+
+    <span class="token comment">// travel distance of the right circle</span>
+    <span class="token keyword">private</span> <span class="token keyword">float</span> right<span class="token punctuation">;</span>
+
+    <span class="token comment">/* Not changed omitted */</span>
+<span class="token punctuation">}</span>
+</code></pre>
+        <p>Right now they both are <code>0</code>, so this represents circles' state like this: <code>0_000_</code>. Let's interpolate these values to create Newton's Cradle effect:</p>
+        <pre><code class="language-java"><span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">NewtonsCradleDrawable</span> <span class="token keyword">extends</span> <span class="token class-name">Drawable</span> <span class="token punctuation">{</span>
+
+    <span class="token keyword">private</span> <span class="token keyword">void</span> <span class="token function">startAnimation</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+
+        <span class="token comment">// this is maximum value of our interpolation</span>
+        <span class="token keyword">final</span> <span class="token keyword">float</span> diameter <span class="token operator">=</span> rectF<span class="token punctuation">.</span><span class="token function">width</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+        <span class="token comment">// Tumbleweed contains a big set of predefined equations (aka interpolators in Android world)</span>
+        <span class="token keyword">final</span> <span class="token class-name">TweenEquation</span> equationIn <span class="token operator">=</span> <span class="token class-name">Quart</span><span class="token punctuation">.</span>IN<span class="token punctuation">;</span>
+        <span class="token keyword">final</span> <span class="token class-name">TweenEquation</span> equationOut <span class="token operator">=</span> <span class="token class-name">Quart</span><span class="token punctuation">.</span>OUT<span class="token punctuation">;</span>
+
+        <span class="token comment">// start animation</span>
+        <span class="token class-name">Timeline</span><span class="token punctuation">.</span><span class="token function">createSequence</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+                <span class="token punctuation">.</span><span class="token function">push</span><span class="token punctuation">(</span><span class="token class-name">Tween</span><span class="token punctuation">.</span><span class="token keyword">to</span><span class="token punctuation">(</span><span class="token keyword">this</span><span class="token punctuation">,</span> LEFT_TWEEN<span class="token punctuation">,</span> duration<span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">target</span><span class="token punctuation">(</span>diameter<span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">ease</span><span class="token punctuation">(</span>equationIn<span class="token punctuation">)</span><span class="token punctuation">)</span>
+                <span class="token punctuation">.</span><span class="token function">push</span><span class="token punctuation">(</span><span class="token class-name">Tween</span><span class="token punctuation">.</span><span class="token keyword">to</span><span class="token punctuation">(</span><span class="token keyword">this</span><span class="token punctuation">,</span> RIGHT_TWEEN<span class="token punctuation">,</span> duration<span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">target</span><span class="token punctuation">(</span>diameter<span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">ease</span><span class="token punctuation">(</span>equationOut<span class="token punctuation">)</span><span class="token punctuation">)</span>
+                <span class="token punctuation">.</span><span class="token function">push</span><span class="token punctuation">(</span><span class="token class-name">Tween</span><span class="token punctuation">.</span><span class="token keyword">to</span><span class="token punctuation">(</span><span class="token keyword">this</span><span class="token punctuation">,</span> RIGHT_TWEEN<span class="token punctuation">,</span> duration<span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">target</span><span class="token punctuation">(</span><span class="token number">0</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">ease</span><span class="token punctuation">(</span>equationIn<span class="token punctuation">)</span><span class="token punctuation">)</span>
+                <span class="token punctuation">.</span><span class="token function">push</span><span class="token punctuation">(</span><span class="token class-name">Tween</span><span class="token punctuation">.</span><span class="token keyword">to</span><span class="token punctuation">(</span><span class="token keyword">this</span><span class="token punctuation">,</span> LEFT_TWEEN<span class="token punctuation">,</span> duration<span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">target</span><span class="token punctuation">(</span><span class="token number">0</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">ease</span><span class="token punctuation">(</span>equationOut<span class="token punctuation">)</span><span class="token punctuation">)</span>
+                <span class="token punctuation">.</span><span class="token function">repeat</span><span class="token punctuation">(</span><span class="token operator">-</span><span class="token number">1</span><span class="token punctuation">,</span> <span class="token number">0</span><span class="token punctuation">)</span> <span class="token comment">// will create endless animation and 0 as the delay between repetitions</span>
+                <span class="token punctuation">.</span><span class="token function">start</span><span class="token punctuation">(</span>tweenManager<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">}</span>
+
+    <span class="token comment">/* Not changed omitted */</span>
+<span class="token punctuation">}</span>
+</code></pre>
+        <p>Tumbleweed comes with a lot of predefined TweenTypes for Views and Drawables, but as we interpolating custom properties we will need to create these two:</p>
+        <pre><code class="language-java"><span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">NewtonsCradleDrawable</span> <span class="token keyword">extends</span> <span class="token class-name">Drawable</span> <span class="token punctuation">{</span>
+
+    <span class="token comment">// TweenType is by design stateless, so it's safe to create a static constant</span>
+    <span class="token keyword">private</span> <span class="token keyword">static</span> <span class="token keyword">final</span> <span class="token class-name">TweenType</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">NewtonCradleDrawable</span><span class="token punctuation">></span></span> LEFT_TWEEN <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">TweenType</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">NewtonCradleDrawable</span><span class="token punctuation">></span></span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+        <span class="token annotation punctuation">@Override</span>
+        <span class="token keyword">public</span> <span class="token keyword">int</span> <span class="token function">getValuesSize</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+            <span class="token keyword">return</span> <span class="token number">1</span><span class="token punctuation">;</span>
+        <span class="token punctuation">}</span>
+
+        <span class="token annotation punctuation">@Override</span>
+        <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">getValues</span><span class="token punctuation">(</span><span class="token annotation punctuation">@NonNull</span> <span class="token class-name">NewtonCradleDrawable</span> newtonCradleDrawable<span class="token punctuation">,</span> <span class="token annotation punctuation">@NonNull</span> <span class="token keyword">float</span><span class="token punctuation">[</span><span class="token punctuation">]</span> values<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+            values<span class="token punctuation">[</span><span class="token number">0</span><span class="token punctuation">]</span> <span class="token operator">=</span> newtonCradleDrawable<span class="token punctuation">.</span>left<span class="token punctuation">;</span>
+        <span class="token punctuation">}</span>
+
+        <span class="token annotation punctuation">@Override</span>
+        <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">setValues</span><span class="token punctuation">(</span><span class="token annotation punctuation">@NonNull</span> <span class="token class-name">NewtonCradleDrawable</span> newtonCradleDrawable<span class="token punctuation">,</span> <span class="token annotation punctuation">@NonNull</span> <span class="token keyword">float</span><span class="token punctuation">[</span><span class="token punctuation">]</span> values<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+            newtonCradleDrawable<span class="token punctuation">.</span>left <span class="token operator">=</span> values<span class="token punctuation">[</span><span class="token number">0</span><span class="token punctuation">]</span><span class="token punctuation">;</span>
+        <span class="token punctuation">}</span>
+    <span class="token punctuation">}</span><span class="token punctuation">;</span>
+
+    <span class="token keyword">private</span> <span class="token keyword">static</span> <span class="token keyword">final</span> <span class="token class-name">TweenType</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">NewtonCradleDrawable</span><span class="token punctuation">></span></span> RIGHT_TWEEN <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">TweenType</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">NewtonCradleDrawable</span><span class="token punctuation">></span></span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+        <span class="token annotation punctuation">@Override</span>
+        <span class="token keyword">public</span> <span class="token keyword">int</span> <span class="token function">getValuesSize</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+            <span class="token keyword">return</span> <span class="token number">1</span><span class="token punctuation">;</span>
+        <span class="token punctuation">}</span>
+
+        <span class="token annotation punctuation">@Override</span>
+        <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">getValues</span><span class="token punctuation">(</span><span class="token annotation punctuation">@NonNull</span> <span class="token class-name">NewtonCradleDrawable</span> newtonCradleDrawable<span class="token punctuation">,</span> <span class="token annotation punctuation">@NonNull</span> <span class="token keyword">float</span><span class="token punctuation">[</span><span class="token punctuation">]</span> values<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+            values<span class="token punctuation">[</span><span class="token number">0</span><span class="token punctuation">]</span> <span class="token operator">=</span> newtonCradleDrawable<span class="token punctuation">.</span>right<span class="token punctuation">;</span>
+        <span class="token punctuation">}</span>
+
+        <span class="token annotation punctuation">@Override</span>
+        <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">setValues</span><span class="token punctuation">(</span><span class="token annotation punctuation">@NonNull</span> <span class="token class-name">NewtonCradleDrawable</span> newtonCradleDrawable<span class="token punctuation">,</span> <span class="token annotation punctuation">@NonNull</span> <span class="token keyword">float</span><span class="token punctuation">[</span><span class="token punctuation">]</span> values<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+            newtonCradleDrawable<span class="token punctuation">.</span>right <span class="token operator">=</span> values<span class="token punctuation">[</span><span class="token number">0</span><span class="token punctuation">]</span><span class="token punctuation">;</span>
+        <span class="token punctuation">}</span>
+    <span class="token punctuation">}</span><span class="token punctuation">;</span>
+
+    <span class="token comment">/* Not changed omitted */</span>
+<span class="token punctuation">}</span>
+</code></pre>
+        <p>Now, it's the time to finally <strong>draw</strong> something:</p>
+        <pre><code class="language-java"><span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">NewtonsCradleDrawable</span> <span class="token keyword">extends</span> <span class="token class-name">Drawable</span> <span class="token punctuation">{</span>
+
+    <span class="token annotation punctuation">@Override</span>
+    <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">draw</span><span class="token punctuation">(</span><span class="token annotation punctuation">@NonNull</span> <span class="token class-name">Canvas</span> canvas<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+
+        <span class="token comment">// if we have no bounds information, do not draw anything, just wait</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token function">getBounds</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">isEmpty</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+            <span class="token keyword">return</span><span class="token punctuation">;</span>
+        <span class="token punctuation">}</span>
+
+        <span class="token comment">// create a 'checkpoint' for the current state of Canvas</span>
+        <span class="token keyword">final</span> <span class="token keyword">int</span> save <span class="token operator">=</span> canvas<span class="token punctuation">.</span><span class="token function">save</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">try</span> <span class="token punctuation">{</span>
+
+            <span class="token comment">// if we have margins initialised, apply them</span>
+            <span class="token keyword">if</span> <span class="token punctuation">(</span>margins <span class="token operator">!=</span> <span class="token keyword">null</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+                canvas<span class="token punctuation">.</span><span class="token function">translate</span><span class="token punctuation">(</span>margins<span class="token punctuation">.</span>x<span class="token punctuation">,</span> margins<span class="token punctuation">.</span>y<span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token punctuation">}</span>
+
+            <span class="token comment">// calculated width (diameter) and radius of our circles</span>
+            <span class="token keyword">final</span> <span class="token keyword">float</span> width <span class="token operator">=</span> rectF<span class="token punctuation">.</span><span class="token function">width</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token keyword">final</span> <span class="token keyword">float</span> radius <span class="token operator">=</span> width <span class="token operator">/</span> <span class="token number">2</span><span class="token punctuation">;</span>
+            
+            <span class="token comment">// draw left circle</span>
+            <span class="token function">drawCircle</span><span class="token punctuation">(</span>canvas<span class="token punctuation">,</span> left<span class="token punctuation">,</span> radius<span class="token punctuation">,</span> colors<span class="token punctuation">[</span><span class="token number">0</span><span class="token punctuation">]</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            
+            <span class="token comment">// translate the Canvas by 2 diameters to start drawing static circles</span>
+            <span class="token comment">// --00__</span>
+            canvas<span class="token punctuation">.</span><span class="token function">translate</span><span class="token punctuation">(</span>width <span class="token operator">*</span> <span class="token number">2</span><span class="token punctuation">,</span> <span class="token number">.0F</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+            <span class="token comment">// draw the second (static) circle</span>
+            <span class="token function">drawCircle</span><span class="token punctuation">(</span>canvas<span class="token punctuation">,</span> <span class="token number">.0F</span><span class="token punctuation">,</span> radius<span class="token punctuation">,</span> colors<span class="token punctuation">[</span><span class="token number">1</span><span class="token punctuation">]</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            
+            <span class="token comment">// move one diameter further __-0__</span>
+            canvas<span class="token punctuation">.</span><span class="token function">translate</span><span class="token punctuation">(</span>width<span class="token punctuation">,</span> <span class="token number">.0F</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+            <span class="token comment">// draw the third (static) circle</span>
+            <span class="token function">drawCircle</span><span class="token punctuation">(</span>canvas<span class="token punctuation">,</span> <span class="token number">.0F</span><span class="token punctuation">,</span> radius<span class="token punctuation">,</span> colors<span class="token punctuation">[</span><span class="token number">2</span><span class="token punctuation">]</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+            <span class="token comment">// move again by one diameter ___-0_</span>
+            canvas<span class="token punctuation">.</span><span class="token function">translate</span><span class="token punctuation">(</span>width<span class="token punctuation">,</span> <span class="token number">.0F</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+            <span class="token comment">// draw the last circle</span>
+            <span class="token function">drawCircle</span><span class="token punctuation">(</span>canvas<span class="token punctuation">,</span> right<span class="token punctuation">,</span> radius<span class="token punctuation">,</span> colors<span class="token punctuation">[</span><span class="token number">3</span><span class="token punctuation">]</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+        <span class="token punctuation">}</span> <span class="token keyword">finally</span> <span class="token punctuation">{</span>
+            <span class="token comment">// after we are finished, restore Canvas state</span>
+            canvas<span class="token punctuation">.</span><span class="token function">restoreToCount</span><span class="token punctuation">(</span>save<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token punctuation">}</span>
+    <span class="token punctuation">}</span>
+
+    <span class="token keyword">private</span> <span class="token keyword">void</span> <span class="token function">drawCircle</span><span class="token punctuation">(</span><span class="token annotation punctuation">@NonNull</span> <span class="token class-name">Canvas</span> canvas<span class="token punctuation">,</span> <span class="token keyword">float</span> x<span class="token punctuation">,</span> <span class="token keyword">float</span> radius<span class="token punctuation">,</span> <span class="token keyword">int</span> color<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+
+        <span class="token keyword">final</span> <span class="token keyword">boolean</span> translate <span class="token operator">=</span> x <span class="token operator">></span> <span class="token number">0</span><span class="token punctuation">;</span>
+
+        <span class="token keyword">if</span> <span class="token punctuation">(</span>translate<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+            canvas<span class="token punctuation">.</span><span class="token function">save</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            canvas<span class="token punctuation">.</span><span class="token function">translate</span><span class="token punctuation">(</span>x<span class="token punctuation">,</span> <span class="token number">.0F</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token punctuation">}</span>
+
+        paint<span class="token punctuation">.</span><span class="token function">setColor</span><span class="token punctuation">(</span>color<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        canvas<span class="token punctuation">.</span><span class="token function">drawRoundRect</span><span class="token punctuation">(</span>rectF<span class="token punctuation">,</span> radius<span class="token punctuation">,</span> radius<span class="token punctuation">,</span> paint<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+        <span class="token keyword">if</span> <span class="token punctuation">(</span>translate<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+            canvas<span class="token punctuation">.</span><span class="token function">restore</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token punctuation">}</span>
+    <span class="token punctuation">}</span>
+
+    <span class="token comment">/* Not changed omitted */</span>
+<span class="token punctuation">}</span>
+</code></pre>
+        <p>So, we have our implementation ready, let's use it:</p>
+        <pre><code class="language-java"><span class="token comment">// for example in our Activity</span>
+<span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">NewtonsCradleActivity</span> <span class="token keyword">extends</span> <span class="token class-name">Activity</span> <span class="token punctuation">{</span>
+
+    <span class="token annotation punctuation">@Override</span>
+    <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">onCreate</span><span class="token punctuation">(</span><span class="token annotation punctuation">@Nullable</span> <span class="token class-name">Bundle</span> savedInstanceState<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+        <span class="token keyword">super</span><span class="token punctuation">.</span><span class="token function">onCreate</span><span class="token punctuation">(</span>savedInstanceState<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+        <span class="token comment">// I will use raw hex values, but in real application obtain these from your resources</span>
+        <span class="token keyword">final</span> <span class="token keyword">int</span><span class="token punctuation">[</span><span class="token punctuation">]</span> colors <span class="token operator">=</span> <span class="token punctuation">{</span>
+                <span class="token number">0xffEF5350</span><span class="token punctuation">,</span> <span class="token comment">// red_400</span>
+                <span class="token number">0xff42A5F5</span><span class="token punctuation">,</span> <span class="token comment">// blue_400</span>
+                <span class="token number">0xff66BB6A</span><span class="token punctuation">,</span> <span class="token comment">// green_400</span>
+                <span class="token number">0xffFFA726</span>  <span class="token comment">// orange_400</span>
+        <span class="token punctuation">}</span><span class="token punctuation">;</span>
+
+        <span class="token comment">// remember that Tumbleweed uses seconds as duration measure unit</span>
+        <span class="token comment">// so, this would be 350L milliseconds</span>
+        <span class="token keyword">final</span> <span class="token keyword">float</span> duration <span class="token operator">=</span> <span class="token number">.35F</span><span class="token punctuation">;</span>
+
+        <span class="token keyword">final</span> <span class="token class-name">NewtonsCradleDrawable</span> drawable <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">NewtonsCradleDrawable</span><span class="token punctuation">(</span>colors<span class="token punctuation">,</span> duration<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+        <span class="token keyword">final</span> <span class="token class-name">View</span> view <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">View</span><span class="token punctuation">(</span><span class="token keyword">this</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        view<span class="token punctuation">.</span><span class="token function">setBackground</span><span class="token punctuation">(</span>drawable<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+        <span class="token function">setContentView</span><span class="token punctuation">(</span>view<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">}</span>
+<span class="token punctuation">}</span>
+</code></pre>
+        <p>And this will give us already mentioned result (inserting it again, so you don't have to scroll):</p>
+        <p><img src="/assets/gif/newton-cradle.gif" alt="gif" /></p>
+        <h3>Conclusion</h3>
+        <p>The final implementation might seem as a bit too wordy, but it's not that bad once you get acquainted with custom Drawables and logic behind drawing on a Canvas. What's important that the code for creating an animation is compact and easy to read. And that's not to mention that is ready to be easily extended. Try playing with the TweenEquations and see what result you get. Maybe add a small vertical translation for moving circles. Or even animate colors of the circles. Tumbleweed will allow you to play with the small details and get the feedback fast, until you achieve your desired effect.</p>
+      </div>
+      <div class="post-date">
+        <em>Sunday, January 28, 2018</em>
+      </div>
+      <hr style="height: 0.1em;" />
+      <div class="post-navigation">
+        <div class="post-navigation-item previous-page">
+          <span class="post-navigation-symbol">&lt; Previous</span>
+          <a href="/blog/2018/01/26/square-frame-layout/index.html">Square Frame Layout</a>
+        </div>
+        <div class="post-navigation-item next-page">
+          <span class="post-navigation-symbol">Next &gt;</span>
+          <a href="/blog/2018/01/28/since-tag/index.html">@since tag to Android source distribution</a>
+        </div>
+      </div>
+    </div>
+    <div class="discuss" style="margin-top: 3em;">
+      <script src="https://utteranc.es/client.js" repo="noties/noties.github.io" issue-term="pathname" label="discuss" theme="github-light" crossorigin="anonymous" async>
+      </script>
+    </div>
+  </main>
+  <footer>
+    <div class="footer-content">
+      <div style="margin-bottom: 1em;">&copy; Dimitry Ivanov</div>
+      <div class="footer-ref"><svg viewBox="0 0 16 16" width="16px" height="16px" xmlns="http://www.w3.org/2000/svg">
+          <path class="svg-path" d="M7.999,0.431c-4.285,0-7.76,3.474-7.76,7.761 c0,3.428,2.223,6.337,5.307,7.363c0.388,0.071,0.53-0.168,0.53-0.374c0-0.184-0.007-0.672-0.01-1.32 c-2.159,0.469-2.614-1.04-2.614-1.04c-0.353-0.896-0.862-1.135-0.862-1.135c-0.705-0.481,0.053-0.472,0.053-0.472 c0.779,0.055,1.189,0.8,1.189,0.8c0.692,1.186,1.816,0.843,2.258,0.645c0.071-0.502,0.271-0.843,0.493-1.037 C4.86,11.425,3.049,10.76,3.049,7.786c0-0.847,0.302-1.54,0.799-2.082C3.768,5.507,3.501,4.718,3.924,3.65 c0,0,0.652-0.209,2.134,0.796C6.677,4.273,7.34,4.187,8,4.184c0.659,0.003,1.323,0.089,1.943,0.261 c1.482-1.004,2.132-0.796,2.132-0.796c0.423,1.068,0.157,1.857,0.077,2.054c0.497,0.542,0.798,1.235,0.798,2.082 c0,2.981-1.814,3.637-3.543,3.829c0.279,0.24,0.527,0.713,0.527,1.437c0,1.037-0.01,1.874-0.01,2.129 c0,0.208,0.14,0.449,0.534,0.373c3.081-1.028,5.302-3.935,5.302-7.362C15.76,3.906,12.285,0.431,7.999,0.431z" /></svg> <a href="https://github.com/noties">github.com/noties</a></div>
+      <div class="footer-ref"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16px" height="16px">
+          <path id="path28_1_" d="M 6.54 21.559 L 6.54 8.66 L 2.253 8.66 L 2.253 21.559 L 6.54 21.559 Z M 4.398 6.898 C 5.892 6.898 6.823 5.908 6.823 4.67 C 6.795 3.404 5.892 2.441 4.426 2.441 C 2.959 2.441 2 3.404 2 4.67 C 2 5.908 2.93 6.898 4.369 6.898 L 4.398 6.898 Z" class="svg-path" stroke-width="0.123663656" />
+          <path id="path30_1_" d="M 8.913 21.559 L 13.201 21.559 L 13.201 14.355 C 13.201 13.97 13.229 13.584 13.342 13.309 C 13.651 12.538 14.357 11.741 15.541 11.741 C 17.093 11.741 17.713 12.924 17.713 14.658 L 17.713 21.559 L 22 21.559 L 22 14.162 C 22 10.2 19.885 8.357 17.064 8.357 C 14.752 8.357 13.736 9.649 13.172 10.53 L 13.201 10.53 L 13.201 8.66 L 8.913 8.66 C 8.97 9.87 8.913 21.559 8.913 21.559 Z" class="svg-path" stroke-width="0.123663656" />
+        </svg> <a href="https://linkedin.com/in/dimitryivanov">linkedin.com/in/dimitryivanov</a></div>
+      <div class="footer-ref"><svg fill="#828282" height="16" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg">
+          <path class="svg-path" d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z" />
+          <path d="M0 0h24v24H0z" fill="none" />
+        </svg> <a href="mailto:di@noties.io">di@noties.io</a></div>
+    </div>
+  </footer>
+  <script>
+const videos = document.querySelectorAll('video');
+if (videos && videos.length > 0) {
+  // https://stackoverflow.com/a/7557433/6745174
+  const isElementInViewPort = (element) => {
+    const rect = element.getBoundingClientRect();
+    const viewPort = {
+      left: 0,
+      top: 0,
+      right: (window.innerWidth || document.documentElement.clientWidth),
+      bottom: (window.innerHeight || document.documentElement.clientHeight)
+    }
+    console.log(element, rect, viewPort);
+    // we should look for overlapping, so if a part is visible in view-port, we
+    // consider element to be also visible
+    return (
+      (rect.left < viewPort.right) && (viewPort.left < rect.right) && (rect.top < viewPort.bottom) && (viewPort.top < rect.bottom));
+  };
+  const isPlaying = (element) => {
+    return (element.currentTime > 0 && !element.paused && !element.ended);
+  };
+  const handler = (event) => {
+    for (video of videos) {
+      if (isPlaying(video) && !isElementInViewPort(video)) {
+        video.pause()
+      }
+    }
+  };
+  window.addEventListener('DOMContentLoaded', handler);
+  window.addEventListener('load', handler);
+  window.addEventListener('resize', handler);
+  window.addEventListener('scroll', handler);
+}
+  </script>
+</body>
+
+</html>
