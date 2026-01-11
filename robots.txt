@@ -1,0 +1,2 @@
+User-agent: *
+Sitemap: http://noties.io/sitemap.xml
